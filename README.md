@@ -1,7 +1,7 @@
 # ARK: Survival Ascended — Docker server for Unraid
 
 [![build](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml/badge.svg)](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml)
-[![docker](https://img.shields.io/docker/v/blckassassin/ark-survival-ascended?sort=semver&label=docker%20hub)](https://hub.docker.com/r/blckassassin/ark-survival-ascended)
+[![docker](https://img.shields.io/docker/v/ferment9348/ark-survival-ascended?sort=semver&label=docker%20hub)](https://hub.docker.com/r/ferment9348/ark-survival-ascended)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 A SteamCMD-based ASA dedicated server container, laid out the way ich777's game
@@ -28,7 +28,7 @@ GE-Proton.
 ## Get the image
 
 ```bash
-docker pull blckassassin/ark-survival-ascended:latest
+docker pull ferment9348/ark-survival-ascended:latest
 ```
 
 Tagged releases are published as `:1.2.3` and `:1.2`, and `:latest` always points
@@ -39,7 +39,7 @@ Or build it yourself — on Unraid you can do this on the server itself:
 ```bash
 git clone https://github.com/blckassassin/ArkSA.git
 cd ArkSA
-docker build -t blckassassin/ark-survival-ascended:latest .
+docker build -t ferment9348/ark-survival-ascended:latest .
 ```
 
 If you build under a different name, change `<Repository>` in the template to

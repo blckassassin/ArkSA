@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>ARK-Survival-Ascended</Name>
-  <Repository>blckassassin/ark-survival-ascended:latest</Repository>
+  <Repository>ferment9348/ark-survival-ascended:latest</Repository>
   <Registry>https://hub.docker.com/</Registry>
   <Network>bridge</Network>
   <MyIP/>

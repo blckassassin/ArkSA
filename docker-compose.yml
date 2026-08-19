@@ -1,7 +1,7 @@
 services:
   ark-survival-ascended:
     build: .
-    image: blckassassin/ark-survival-ascended:latest
+    image: ferment9348/ark-survival-ascended:latest
     container_name: ark-survival-ascended
     restart: unless-stopped
     stop_grace_period: 150s

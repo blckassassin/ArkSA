@@ -19,7 +19,7 @@ is for local testing.
 ## Build
 
 ```sh
-docker build -t blckassassin/ark-survival-ascended:latest .
+docker build -t ferment9348/ark-survival-ascended:latest .
 ```
 
 ## Test

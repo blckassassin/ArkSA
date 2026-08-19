@@ -15,6 +15,52 @@ server binary for ASA, so this installs the **Windows** depot (SteamCMD is told
 `+@sSteamCmdForcePlatformType windows`) and runs `ArkAscendedServer.exe` under
 GE-Proton.
 
+## What this one does differently
+
+The download is the easy part. Almost everything that goes wrong with a
+dedicated ASA server happens afterwards, and this container is built around
+four of those failures in particular.
+
+**You can actually edit the config files.** Getting an ini file editable over
+SMB from a Windows box needs three things to line up at once: the files have to
+be owned by the right uid, they have to carry permissive modes, and every
+directory above them has to be traversable. Permissive files behind a locked
+parent are still unreachable, which is why the top-level mode defaults to `775`
+rather than the tighter `770` you might expect. The permission pass runs on
+every start *and* again on shutdown, so it repairs a migrated install or files
+wine created with its own tight modes, not just the ones created from here on.
+`CONFIG_UMASK` translates a plain umask into the two modes it implies, applying
+them to files and directories separately so directories keep the execute bit
+that makes them possible to enter. Full detail in
+[Editing the configs over SMB](#editing-the-configs-over-smb-from-windows).
+
+**Stopping the container saves the world.** ARK writes its save on exit, so a
+hard kill is how people lose hours. On `docker stop` this sends `SaveWorld` over
+RCON, waits, sends `DoExit`, and only kills the wine prefix if the server is
+still up after `STOP_TIMEOUT`. That is also why the entrypoint deliberately does
+not use process-group signalling — it would deliver SIGTERM straight to the wine
+processes and skip the save entirely.
+
+**The container never overwrites your edits.** `GameUserSettings.ini` is seeded
+once, with RCON enabled, and then left alone permanently — there is no code path
+here that rewrites a config file you may have changed. ARK itself is a different
+matter: it rewrites that file when it shuts down, so stop the container before
+editing rather than while it runs.
+
+**The install is located, not assumed.** The server binary is found by searching
+for it rather than by hardcoding `ShooterGame/Binaries/Win64`. That layout has
+shifted before, and it means an existing install laid out by some other setup is
+found rather than ignored.
+
+Two smaller things. GE-Proton splits its releases by architecture, and the ARM
+build sorts first in the release listing, so the x86_64 tarball is selected
+explicitly rather than by taking whichever tarball appears first; pinning
+accepts either the release tag or the full asset name. And if GitHub is
+unreachable or rate-limiting you, the container falls back to whatever Proton
+build is already on disk instead of refusing to boot. The RCON client is a short
+Python script using nothing outside the standard library, so there is no extra
+package to install or keep current just to send `SaveWorld`.
+
 ## Before you start
 
 - **Disk:** the depot is roughly 60GB. Put it on a cache pool or SSD share, not

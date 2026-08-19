@@ -13,7 +13,9 @@ is for local testing.
 | `scripts/start-server.sh`     | The real runner. SteamCMD, Proton, config seed, launch args, graceful shutdown. |
 | `scripts/rcon.py`             | Minimal Source RCON client. No dependencies beyond stdlib. |
 | `scripts/rcon-cli.sh`         | Thin wrapper for `docker exec` use.                  |
-| `my-ArkSurvivalAscended.xml`  | Unraid Community Apps template. Stays at the repo root — that is where CA looks. |
+| `templates/ark-survival-ascended.xml` | Unraid Community Apps template. CA requires one XML per app under `templates/`. |
+| `ca_profile.xml`              | CA repository profile. Must be at the root with a non-empty `<Profile>`, or submission is blocked. |
+| `icon.svg`                    | Repository icon referenced by `ca_profile.xml` and the template. |
 | `docker-compose.yml`          | Local testing only. Uses uid/gid 1000, not Unraid's 99/100. |
 
 ## Build

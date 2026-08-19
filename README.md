@@ -42,12 +42,12 @@ cd ArkSA
 docker build -t ferment9348/ark-survival-ascended:latest .
 ```
 
-If you build under a different name, change `<Repository>` in the template to
-match.
+If you build under a different name, change `<Repository>` in
+`templates/ark-survival-ascended.xml` to match.
 
 ## Install on Unraid
 
-1. Copy `my-ArkSurvivalAscended.xml` to
+1. Copy `templates/ark-survival-ascended.xml` to
    `/boot/config/plugins/dockerMan/templates-user/`.
 2. Docker tab → **Add Container** → pick `ARK-Survival-Ascended` from the
    template dropdown.

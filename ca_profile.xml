@@ -1,0 +1,19 @@
+<CommunityApplications>
+  <Profile>
+    Dedicated game server containers for Unraid.
+
+    Currently maintained here: **ARK: Survival Ascended**, a SteamCMD-based
+    dedicated server. ASA ships no native Linux server binary, so the container
+    installs the Windows depot and runs it under GE-Proton.
+
+    The layout follows ich777's game server containers — the same
+    `/serverdata/steamcmd` and `/serverdata/serverfiles` split, the same
+    `UID`/`GID`/`VALIDATE` environment variables, and the same approach of
+    downloading the game files on first boot so the image itself stays small.
+
+    Support is through GitHub issues:
+    https://github.com/blckassassin/ArkSA/issues
+  </Profile>
+  <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/icon.svg</Icon>
+  <WebPage>https://github.com/blckassassin/ArkSA</WebPage>
+</CommunityApplications>

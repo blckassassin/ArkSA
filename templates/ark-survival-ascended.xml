@@ -2,9 +2,8 @@
 <Container version="2">
   <Name>ARK-Survival-Ascended</Name>
   <Repository>ferment9348/ark-survival-ascended:latest</Repository>
-  <Registry>https://hub.docker.com/</Registry>
+  <Registry>https://hub.docker.com/r/ferment9348/ark-survival-ascended/</Registry>
   <Network>bridge</Network>
-  <MyIP/>
   <Shell>bash</Shell>
   <Privileged>false</Privileged>
   <Support>https://github.com/blckassassin/ArkSA/issues</Support>
@@ -24,15 +23,16 @@
   </Overview>
   <Category>GameServers:</Category>
   <WebUI/>
-  <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/my-ArkSurvivalAscended.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/ich777/docker-templates/master/ich777/images/ark-survival-ascended.png</Icon>
+  <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/templates/ark-survival-ascended.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/icon.svg</Icon>
+  <ReadMe>https://raw.githubusercontent.com/blckassassin/ArkSA/main/README.md</ReadMe>
+  <License>MIT</License>
+  <ExtraSearchTerms>ark survival ascended asa dedicated server steamcmd proton</ExtraSearchTerms>
+  <Changes>Initial release.</Changes>
   <ExtraParams>--restart=unless-stopped --ulimit nofile=1048576:1048576</ExtraParams>
-  <PostArgs/>
-  <CPUset/>
-  <DateInstalled/>
-  <DonateText/>
-  <DonateLink/>
-  <Requires/>
+  <Requires>Roughly 60GB of free space for the game files, and 16GB RAM as a
+  practical floor for a vanilla map. Put the appdata on a cache pool or SSD
+  share rather than the array.</Requires>
 
   <Config Name="Game Port" Target="7777" Default="7777" Mode="udp" Description="Game traffic. This is the one that has to be forwarded." Type="Port" Display="always" Required="true" Mask="false">7777</Config>
   <Config Name="Peer Port" Target="7778" Default="7778" Mode="udp" Description="Game port + 1. Not normally required, but cheap to forward if players report flaky connects." Type="Port" Display="always" Required="false" Mask="false">7778</Config>

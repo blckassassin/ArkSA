@@ -1,0 +1,40 @@
+services:
+  ark-survival-ascended:
+    build: .
+    image: blckassassin/ark-survival-ascended:latest
+    container_name: ark-survival-ascended
+    restart: unless-stopped
+    stop_grace_period: 150s
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    ports:
+      - "7777:7777/udp"
+      - "7778:7778/udp"
+      - "27020:27020/tcp"
+    environment:
+      SERVER_NAME: "ASA Server"
+      MAP: "TheIsland_WP"
+      MAX_PLAYERS: "20"
+      SRV_PWD: ""
+      SRV_ADMIN_PWD: "changeme"
+      MODS: ""
+      CROSSPLAY: "false"
+      BATTLEYE: "false"
+      GAME_PORT: "7777"
+      RCON_PORT: "27020"
+      GAME_PARAMS_EXTRA: ""
+      PROTON_VERSION: "latest"
+      VALIDATE: ""
+      FIX_PERMS: "true"
+      UMASK: "000"
+      CONFIG_UMASK: ""
+      # 1000:1000 suits an ordinary Linux host. The Unraid template uses
+      # 99:100 (nobody:users) instead, which is what Unraid's SMB stack expects.
+      UID: "1000"
+      GID: "1000"
+    volumes:
+      - ./data/serverfiles:/serverdata/serverfiles
+      - ./data/steamcmd:/serverdata/steamcmd
+      - ./data/proton:/serverdata/proton

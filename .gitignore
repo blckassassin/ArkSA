@@ -1,0 +1,10 @@
+# Local test data: server files, SteamCMD, the Proton prefix.
+# The ASA depot alone is ~60GB.
+data/
+
+.remember/
+
+*.log
+
+__pycache__/
+*.pyc

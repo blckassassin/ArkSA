@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>ARK-Survival-Ascended</Name>
+  <Repository>blckassassin/ark-survival-ascended:latest</Repository>
+  <Registry>https://hub.docker.com/</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/blckassassin/ArkSA/issues</Support>
+  <Project>https://github.com/blckassassin/ArkSA</Project>
+  <Overview>
+    ARK: Survival Ascended dedicated server.
+
+    ASA ships Windows-only server binaries, so this container installs the Windows depot with SteamCMD and runs it under GE-Proton. Both SteamCMD and Proton are fetched on first start, so the image itself stays small.
+
+    Heads up before you start: the game files are roughly 60GB and the server wants a lot of RAM (16GB is a sensible floor for a vanilla map, more with mods or players). Put the appdata on an SSD or a cache pool, not on the array.
+
+    First boot downloads ~60GB and then builds a Proton prefix. Expect a long, quiet startup - check the logs rather than assuming it hung.
+
+    Config files are kept editable over SMB. A "config" shortcut is created at the top of the game files folder pointing at ShooterGame/Saved/Config/WindowsServer, so you can browse straight to it from Windows. Stop the container before editing - the server rewrites GameUserSettings.ini when it shuts down and will overwrite changes made while it is running.
+
+    Only 7777/udp needs forwarding at your router. The old 27015 query port is vestigial in ASA because server discovery goes through Epic Online Services rather than Steam. Forward RCON only if you administer from outside your LAN.
+  </Overview>
+  <Category>GameServers:</Category>
+  <WebUI/>
+  <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/my-ArkSurvivalAscended.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/ich777/docker-templates/master/ich777/images/ark-survival-ascended.png</Icon>
+  <ExtraParams>--restart=unless-stopped --ulimit nofile=1048576:1048576</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+
+  <Config Name="Game Port" Target="7777" Default="7777" Mode="udp" Description="Game traffic. This is the one that has to be forwarded." Type="Port" Display="always" Required="true" Mask="false">7777</Config>
+  <Config Name="Peer Port" Target="7778" Default="7778" Mode="udp" Description="Game port + 1. Not normally required, but cheap to forward if players report flaky connects." Type="Port" Display="always" Required="false" Mask="false">7778</Config>
+  <Config Name="Query Port" Target="27015" Default="27015" Mode="udp" Description="Legacy Steam query port. Vestigial in ASA - discovery runs through EOS. Left here for tooling that expects it." Type="Port" Display="advanced" Required="false" Mask="false">27015</Config>
+  <Config Name="RCON Port" Target="27020" Default="27020" Mode="tcp" Description="Source RCON. Only forward at the router if you administer remotely, and never without a strong admin password." Type="Port" Display="always" Required="false" Mask="false">27020</Config>
+
+  <Config Name="Game Files" Target="/serverdata/serverfiles" Default="/mnt/cache/appdata/ark-survival-ascended" Mode="rw" Description="Where the ~60GB of server files, saves and configs live. Use a cache pool or SSD share." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/ark-survival-ascended</Config>
+  <Config Name="SteamCMD" Target="/serverdata/steamcmd" Default="/mnt/cache/appdata/steamcmd" Mode="rw" Description="Shared SteamCMD install. Safe to point several game containers at the same folder." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/steamcmd</Config>
+  <Config Name="Proton" Target="/serverdata/proton" Default="/mnt/cache/appdata/asa-proton" Mode="rw" Description="GE-Proton build plus the wine prefix. Delete this folder to rebuild the prefix from scratch if the server starts misbehaving." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/asa-proton</Config>
+
+  <Config Name="Server Name" Target="SERVER_NAME" Default="ASA Server" Mode="" Description="Session name shown in the Unofficial server list." Type="Variable" Display="always" Required="true" Mask="false">ASA Server</Config>
+  <Config Name="Map" Target="MAP" Default="TheIsland_WP" Mode="" Description="Note the _WP suffix - ASA maps are World Partition and the bare ASE name will not load. e.g. TheIsland_WP, ScorchedEarth_WP, TheCenter_WP, Aberration_WP, Extinction_WP, Ragnarok_WP, Astraeos_WP" Type="Variable" Display="always" Required="true" Mask="false">TheIsland_WP</Config>
+  <Config Name="Max Players" Target="MAX_PLAYERS" Default="20" Mode="" Description="Passed as -WinLiveMaxPlayers. The old ?MaxPlayers= is ignored by ASA." Type="Variable" Display="always" Required="true" Mask="false">20</Config>
+  <Config Name="Server Password" Target="SRV_PWD" Default="" Mode="" Description="Join password. Leave blank for an open server." Type="Variable" Display="always" Required="false" Mask="true"/>
+  <Config Name="Admin Password" Target="SRV_ADMIN_PWD" Default="" Mode="" Description="Admin password, and also the RCON password - ASA has no separate RCON credential. Change this from the default." Type="Variable" Display="always" Required="true" Mask="true">changeme</Config>
+
+  <Config Name="Mods" Target="MODS" Default="" Mode="" Description="Comma separated CurseForge project IDs, no spaces. ASA mods come from CurseForge, not the Steam Workshop. Load order follows the list, leftmost first." Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="Crossplay" Target="CROSSPLAY" Default="false" Mode="" Description="Set true to let Epic Games Store players join. Not on by default for self-hosted servers - this is the usual reason Epic players cannot find a server." Type="Variable" Display="always" Required="false" Mask="false">false</Config>
+  <Config Name="BattlEye" Target="BATTLEYE" Default="false" Mode="" Description="BattlEye does not run cleanly under Proton, so this defaults to false (which passes -NoBattlEye)." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+
+  <Config Name="Extra Game Parameters" Target="GAME_PARAMS_EXTRA" Default="" Mode="" Description="Extra dash flags, space separated. e.g. -ForceAllowCaveFlyers -servergamelog -NoTransferFromFiltering" Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="Extra Query Parameters" Target="QUERY_PARAMS_EXTRA" Default="" Mode="" Description="Extra ?key=value pairs for the map string, no leading ?. e.g. AllowCrateSpawnsOnTopOfStructures=true?PreventDownloadSurvivors=false" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+
+  <Config Name="Cluster ID" Target="CLUSTER_ID" Default="" Mode="" Description="Set the same value on every server in a cluster to enable transfers. Leave blank for a standalone server." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Cluster Directory" Target="CLUSTER_DIR" Default="/serverdata/serverfiles/cluster" Mode="" Description="Shared transfer folder. For a real cluster, map this to a path shared by all the containers." Type="Variable" Display="advanced" Required="false" Mask="false">/serverdata/serverfiles/cluster</Config>
+
+  <Config Name="Validate Files" Target="VALIDATE" Default="" Mode="" Description="Set to true to have SteamCMD verify every file on start. Slow - turn it back off once it has run." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Proton Version" Target="PROTON_VERSION" Default="latest" Mode="" Description="latest, or a pinned tag like GE-Proton9-27. Pin it if a new Proton build ever breaks the server, or if GitHub API rate limits bite." Type="Variable" Display="advanced" Required="false" Mask="false">latest</Config>
+  <Config Name="Stop Timeout" Target="STOP_TIMEOUT" Default="120" Mode="" Description="Seconds to wait for a graceful save-and-exit before force killing. Also raise Unraid's own container stop timeout to match." Type="Variable" Display="advanced" Required="false" Mask="false">120</Config>
+
+  <Config Name="Steam Username" Target="USERNAME" Default="" Mode="" Description="Leave blank. The ASA server app downloads anonymously." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Steam Password" Target="PASSWRD" Default="" Mode="" Description="Leave blank. The ASA server app downloads anonymously." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+
+  <Config Name="UID" Target="UID" Default="99" Mode="" Description="User ID. 99 is the Unraid default." Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
+  <Config Name="GID" Target="GID" Default="100" Mode="" Description="Group ID. 100 is the Unraid default." Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
+  <Config Name="Fix Share Permissions" Target="FIX_PERMS" Default="true" Mode="" Description="Keeps the Saved folder (configs and saves) readable and writable over SMB, so you can edit the ini files from a Windows PC. Runs on every start and again on shutdown. Set false only if you want to manage permissions yourself." Type="Variable" Display="always" Required="false" Mask="false">true</Config>
+  <Config Name="Config UMASK" Target="CONFIG_UMASK" Default="" Mode="" Description="umask applied to the Saved folder (configs and saves) when Fix Share Permissions is on. Leave blank to reuse the container UMASK, which is the usual choice. 000 = everyone can edit. 007 = owner and group only, which still works for Unraid SMB users since they belong to the users group. 022 = read-only for everyone but the owner. 077 = owner only." Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="Config Permissions" Target="CONFIG_PERM" Default="" Mode="" Description="Optional escape hatch. A chmod expression such as g+rwX applied recursively to the Saved folder. Overrides Config UMASK when set. Leave blank unless you need something a umask cannot express." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Data Permissions" Target="DATA_PERM" Default="775" Mode="" Description="chmod applied to the top-level server files folder. 775 rather than 770 so an SMB client that is not the owner and not in the group can still traverse into it." Type="Variable" Display="advanced" Required="false" Mask="false">775</Config>
+  <Config Name="UMASK" Target="UMASK" Default="000" Mode="" Description="umask for files the server creates. 000 means new files land as 666 and new directories as 777, which keeps them editable over the share." Type="Variable" Display="advanced" Required="false" Mask="false">000</Config>
+</Container>

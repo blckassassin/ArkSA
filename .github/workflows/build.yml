@@ -1,0 +1,57 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  IMAGE: blckassassin/ark-survival-ascended
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint the scripts
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck --severity=warning scripts/*.sh
+          python3 -m py_compile scripts/rcon.py
+
+      - uses: docker/setup-buildx-action@v3
+
+      # amd64 only: SteamCMD pulls a Windows x86_64 depot that runs under Proton,
+      # so an arm64 image would build and then be unable to run the server.
+      - name: Tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      # Only tags publish. Pushes to main and pull requests build and stop, so
+      # :latest is always a release that was cut deliberately.
+      - name: Log in to Docker Hub
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

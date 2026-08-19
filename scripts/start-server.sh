@@ -188,6 +188,22 @@ install_proton() {
         return 1
     fi
 
+    # Verify before extracting. Every GE-Proton release publishes a .sha512sum
+    # next to the tarball, naming the file exactly as we saved it. A missing
+    # sums file is a warning rather than a failure; a mismatch is fatal.
+    if curl -fsSL "${url%.tar.gz}.sha512sum" -o "${tarball}.sha512sum"; then
+        if ( cd /tmp && sha512sum -c --status "$(basename "${tarball}").sha512sum" ); then
+            echo "---Checksum verified---"
+        else
+            echo "---Checksum MISMATCH for ${version}, refusing to extract---"
+            rm -f "${tarball}" "${tarball}.sha512sum"
+            return 1
+        fi
+    else
+        echo "---No published checksum for ${version}, skipping verification---"
+    fi
+    rm -f "${tarball}.sha512sum"
+
     mkdir -p "${PROTON_DIR}"
     echo "---Extracting ${version}---"
     tar -xzf "${tarball}" -C "${PROTON_DIR}"

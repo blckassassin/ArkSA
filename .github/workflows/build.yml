@@ -16,9 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # shellcheck and python3 are both preinstalled on ubuntu-latest; installing
+      # shellcheck from apt just added a slow, flaky step.
       - name: Lint the scripts
         run: |
-          sudo apt-get update && sudo apt-get install -y shellcheck
           shellcheck --severity=warning scripts/*.sh
           python3 -m py_compile scripts/rcon.py
 

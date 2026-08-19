@@ -53,6 +53,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # The Docker Hub page is otherwise blank, and Community Apps links to it.
+      - name: Sync the Docker Hub description
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: peter-evans/dockerhub-description@v5
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE }}
+          short-description: "ARK: Survival Ascended dedicated server for Unraid — SteamCMD + GE-Proton"
+          readme-filepath: ./README.md
+
       - name: Build
         uses: docker/build-push-action@v7
         with:

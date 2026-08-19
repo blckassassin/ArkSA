@@ -22,7 +22,6 @@
     Only 7777/udp needs forwarding at your router. The old 27015 query port is vestigial in ASA because server discovery goes through Epic Online Services rather than Steam. Forward RCON only if you administer from outside your LAN.
   </Overview>
   <Category>GameServers:</Category>
-  <WebUI/>
   <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/templates/ark-survival-ascended.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/icon.png</Icon>
   <ReadMe>https://raw.githubusercontent.com/blckassassin/ArkSA/main/README.md</ReadMe>

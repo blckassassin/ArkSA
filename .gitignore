@@ -8,3 +8,7 @@ data/
 
 __pycache__/
 *.pyc
+
+# icongen preview sheet is a build artifact
+tools/icongen/preview.png
+tools/icongen/__pycache__/

@@ -24,7 +24,7 @@
   <Category>GameServers:</Category>
   <WebUI/>
   <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/templates/ark-survival-ascended.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/icon.svg</Icon>
+  <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/icon.png</Icon>
   <ReadMe>https://raw.githubusercontent.com/blckassassin/ArkSA/main/README.md</ReadMe>
   <License>MIT</License>
   <ExtraSearchTerms>ark survival ascended asa dedicated server steamcmd proton</ExtraSearchTerms>

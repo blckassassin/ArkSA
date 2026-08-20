@@ -245,9 +245,17 @@ if [ "${DEBUG,,}" = "true" ]; then
     export PROTON_LOG_DIR="${SERVER_DIR}/logs"
     export WINEDEBUG="${WINEDEBUG_OVERRIDE:-+err,+fixme,+loaddll}"
     mkdir -p "${PROTON_LOG_DIR}"
-    echo "---DEBUG is on: verbose wine output below, Proton log in ${PROTON_LOG_DIR}---"
+    echo "---DEBUG is on: Proton log at ${PROTON_LOG_DIR}/steam-${GAME_ID}.log---"
     echo "---Turn it off once you have what you need; it is noisy and slows startup---"
 fi
+
+# Proton expects to be told which game it is running. Without SteamGameId it
+# silently disables its own logging entirely (setup_logging returns early), and
+# protonfixes decides it is running under a unit test and skips every fix. Both
+# were happening here, which is why DEBUG=true produced no log at all.
+export SteamAppId="${GAME_ID}"
+export SteamGameId="${GAME_ID}"
+export STEAM_COMPAT_APP_ID="${GAME_ID}"
 
 export STEAM_COMPAT_CLIENT_INSTALL_PATH="${PROTON_DIR}/steam"
 export STEAM_COMPAT_DATA_PATH="${PROTON_DIR}/prefix"

@@ -327,12 +327,17 @@ has downloaded its own payload.
 change what runs here without you choosing it. That is the whole reason for the
 pin: reproducibility, not a belief that newer builds are broken.
 
-For the record on GE-Proton 11: the maintainer of another Linux ASA launcher
-reported that GE-Proton11-1 hangs on `ArkAscendedServer.exe` during import
-resolution, verified July 2026. This container has not reproduced that, and its
-own startup failures turned out to be unrelated. Newer builds are untested here
-rather than known-bad — if you try one, the log will tell you it differs from
-the tested build.
+**Do not set `latest`.** GE-Proton 11 hangs `ArkAscendedServer.exe` before the
+engine writes anything at all — no crash, no exception, no log, the container
+simply never comes up. Verified directly with this image on 2026-08-20:
+GE-Proton11-5 hung indefinitely while GE-Proton10-34 reached "advertising for
+join" in 44 seconds, on the same machine with the same game files and only the
+Proton build changed. The maintainer of another Linux ASA launcher reported the
+same behaviour against GE-Proton11-1 in July 2026, so it spans the series
+rather than one build.
+
+This failure is silent by nature, so the container also warns if no engine
+output has appeared several minutes after launch.
 
 The container warns in its log whenever the Proton build in use is not the one
 the image was tested against, so a container still carrying an older

@@ -55,12 +55,13 @@ Full list in the [README](https://github.com/blckassassin/ArkSA).
 
 ## Worth knowing
 
-**Proton is pinned, not tracking `latest`.** `PROTON_VERSION` defaults to the
-build this image was tested against, so an upstream Proton release cannot break
-your server overnight. The container warns in its log if you run a different
-one. There are third-party reports of GE-Proton 11 regressing on
-`ArkAscendedServer.exe`, but this image has not confirmed them — treat newer
-builds as untested here rather than known-bad.
+**Proton is pinned on purpose — do not set `latest`.** GE-Proton 11 hangs
+`ArkAscendedServer.exe` before it writes a single line of engine log: no crash,
+no error, the container just sits there forever. Verified directly with this
+image on 2026-08-20 — GE-Proton11-5 hangs, GE-Proton10-34 reaches "advertising
+for join" in 44 seconds, same machine and same files. The container warns in
+its log if you run a build it was not tested against, and says so again if no
+engine output appears.
 
 **Stopping saves the world.** On `docker stop` it sends `SaveWorld` over RCON,
 then `DoExit`, and only force-kills after `STOP_TIMEOUT`. Give the container a

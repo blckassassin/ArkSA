@@ -20,6 +20,7 @@ CONFIG_DIR=""
 
 SERVER_PID=""
 LOG_TAIL_PID=""
+WATCHDOG_PID=""
 SHUTTING_DOWN="false"
 CONFIG_UMASK_EFFECTIVE=""
 
@@ -415,9 +416,14 @@ wineserver_kill() {
 }
 
 stop_log_tail() {
-    [ -n "${LOG_TAIL_PID}" ] || return 0
-    kill "${LOG_TAIL_PID}" 2>/dev/null || true
-    LOG_TAIL_PID=""
+    if [ -n "${LOG_TAIL_PID}" ]; then
+        kill "${LOG_TAIL_PID}" 2>/dev/null || true
+        LOG_TAIL_PID=""
+    fi
+    if [ -n "${WATCHDOG_PID}" ]; then
+        kill "${WATCHDOG_PID}" 2>/dev/null || true
+        WATCHDOG_PID=""
+    fi
 }
 
 graceful_shutdown() {
@@ -485,6 +491,21 @@ ENGINE_LOG="${SAVED_DIR}/Logs/ShooterGame.log"
 mkdir -p "$(dirname "${ENGINE_LOG}")" 2>/dev/null || true
 tail -F -n 0 "${ENGINE_LOG}" 2>/dev/null &
 LOG_TAIL_PID=$!
+
+# A wrong Proton build hangs ASA before it writes any engine log at all: no
+# crash, no error, the container just sits there looking healthy. That is far
+# harder to diagnose than a crash, so call it out rather than let someone wait.
+(
+    sleep "${STARTUP_WARN_SECS:-300}"
+    if [ ! -s "${ENGINE_LOG}" ]; then
+        echo "---No engine output yet. The server may be hung rather than slow.---"
+        echo "---A Proton build ASA does not tolerate fails exactly like this,---"
+        echo "---silently and before any log is written. Currently running:---"
+        echo "---  ${PROTON_RESOLVED} (tested: ${PROTON_TESTED:-unknown})---"
+        echo "---If those differ, set PROTON_VERSION=${PROTON_TESTED:-GE-Proton10-34} and restart.---"
+    fi
+) &
+WATCHDOG_PID=$!
 
 "${PROTON_BIN}" run "./${SERVER_EXE}" "${QUERY}" "${FLAGS[@]}" &
 SERVER_PID=$!

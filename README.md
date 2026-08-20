@@ -322,12 +322,17 @@ container links from SteamCMD automatically. If you see
 SteamCMD actually finished its first run — the libraries only appear after it
 has downloaded its own payload.
 
-**A Proton update broke something.** `PROTON_VERSION` is already pinned to
-`GE-Proton10-34` rather than tracking `latest`, because the GE-Proton 11 series
-has a known regression with `ArkAscendedServer.exe`: startup fails before the
-engine emits any log output, so there is no error to go on. If you set
-`latest` and the server stops booting, that is the first thing to undo. Pin to
-whichever build last worked.
+**A Proton update broke something.** `PROTON_VERSION` is pinned to
+`GE-Proton10-34` rather than tracking `latest`, so an upstream release cannot
+change what runs here without you choosing it. That is the whole reason for the
+pin: reproducibility, not a belief that newer builds are broken.
+
+For the record on GE-Proton 11: the maintainer of another Linux ASA launcher
+reported that GE-Proton11-1 hangs on `ArkAscendedServer.exe` during import
+resolution, verified July 2026. This container has not reproduced that, and its
+own startup failures turned out to be unrelated. Newer builds are untested here
+rather than known-bad — if you try one, the log will tell you it differs from
+the tested build.
 
 The container warns in its log whenever the Proton build in use is not the one
 the image was tested against, so a container still carrying an older

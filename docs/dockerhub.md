@@ -55,9 +55,12 @@ Full list in the [README](https://github.com/blckassassin/ArkSA).
 
 ## Worth knowing
 
-**Proton is pinned on purpose.** The GE-Proton 11 series has a known regression
-with `ArkAscendedServer.exe`. The container warns in its log if you run a build
-it was not tested against.
+**Proton is pinned, not tracking `latest`.** `PROTON_VERSION` defaults to the
+build this image was tested against, so an upstream Proton release cannot break
+your server overnight. The container warns in its log if you run a different
+one. There are third-party reports of GE-Proton 11 regressing on
+`ArkAscendedServer.exe`, but this image has not confirmed them — treat newer
+builds as untested here rather than known-bad.
 
 **Stopping saves the world.** On `docker stop` it sends `SaveWorld` over RCON,
 then `DoExit`, and only force-kills after `STOP_TIMEOUT`. Give the container a

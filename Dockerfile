@@ -1,4 +1,6 @@
-FROM debian:bookworm-slim
+# Trixie, not bookworm: GE-Proton 11 links against GLIBC_2.38 and bookworm
+# ships 2.36, so wine fails to load ntdll.so and the server exits code 1.
+FROM debian:trixie-slim
 
 LABEL org.opencontainers.image.title="ARK: Survival Ascended Dedicated Server" \
       org.opencontainers.image.description="ASA dedicated server (Windows binary via GE-Proton), SteamCMD-based, Unraid friendly. Inspired by ich777/steamcmd." \

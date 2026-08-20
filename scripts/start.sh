@@ -36,7 +36,7 @@ fi
 if [ "$(id -g steam)" != "${TARGET_GID}" ]; then
     if getent group "${TARGET_GID}" >/dev/null 2>&1; then
         echo "---Adding steam to existing group $(getent group "${TARGET_GID}" | cut -d: -f1) (${TARGET_GID})---"
-        usermod -o -g "${TARGET_GID}" steam
+        usermod -g "${TARGET_GID}" steam
     else
         echo "---Setting steam group id to ${TARGET_GID}---"
         groupmod -o -g "${TARGET_GID}" steam

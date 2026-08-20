@@ -290,7 +290,11 @@ Add it to your `go` file to make it stick across reboots.
 has a known regression with `ArkAscendedServer.exe`: startup fails before the
 engine emits any log output, so there is no error to go on. If you set
 `latest` and the server stops booting, that is the first thing to undo. Pin to
-whichever build last worked. Deleting `<serverfiles>/proton` forces a clean prefix rebuild, which is
+whichever build last worked.
+
+The container warns in its log whenever the Proton build in use is not the one
+the image was tested against, so a container still carrying an older
+`PROTON_VERSION` setting says so on every start rather than failing silently. Deleting `<serverfiles>/proton` forces a clean prefix rebuild, which is
 worth trying before anything drastic — that folder holds only the Proton build
 and the wine prefix, both of which are rebuilt automatically. Your saves and
 configs are under `ShooterGame/`, untouched.

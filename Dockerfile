@@ -27,6 +27,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
     CROSSPLAY="false" \
     GAME_PARAMS_EXTRA="" \
     QUERY_PARAMS_EXTRA="" \
+    PROTON_TESTED="GE-Proton10-34" \
     PROTON_VERSION="GE-Proton10-34" \
     VALIDATE="" \
     USERNAME="" \

@@ -222,19 +222,19 @@ if ! install_proton "${PROTON_VERSION}"; then
 fi
 echo "---Using Proton: ${PROTON_BIN}---"
 
-# The GE-Proton 11 series has a known regression with ArkAscendedServer.exe: the
-# server dies during startup without emitting a single line of engine log, so
-# there is nothing to diagnose from. Warn loudly rather than let someone chase
-# it. Reached most often by an existing install still carrying PROTON_VERSION
-# =latest, since a changed default only applies to new containers.
-case "$(basename "$(dirname "${PROTON_BIN}")")" in
-    GE-Proton1[1-9]*|GE-Proton[2-9][0-9]*)
-        echo "---WARNING: this is a GE-Proton 11 or newer build---"
-        echo "---That series is known to break ArkAscendedServer.exe. The server will---"
-        echo "---likely fail to start with no engine log output to explain why.---"
-        echo "---Fix: set PROTON_VERSION=GE-Proton10-34 and delete ${PROTON_DIR}---"
-        ;;
-esac
+# ASA is sensitive to the Proton build, so say something when this is not the
+# one the image was built and tested against. Checking for a deviation rather
+# than for specific bad versions means this never goes stale, and it also
+# catches a pinned old build or a fallback to whatever was already on disk.
+PROTON_RESOLVED="$(basename "$(dirname "${PROTON_BIN}")")"
+if [ -n "${PROTON_TESTED:-}" ] && [ "${PROTON_RESOLVED%-x86_64}" != "${PROTON_TESTED%-x86_64}" ]; then
+    echo "---WARNING: this is not the Proton build this image was tested with---"
+    echo "---  running: ${PROTON_RESOLVED}---"
+    echo "---  tested:  ${PROTON_TESTED}---"
+    echo "---If the server exits without producing any engine log output, this is---"
+    echo "---the first thing to change: set PROTON_VERSION=${PROTON_TESTED} and---"
+    echo "---delete ${PROTON_DIR} so the prefix is rebuilt.---"
+fi
 
 export STEAM_COMPAT_CLIENT_INSTALL_PATH="${PROTON_DIR}/steam"
 export STEAM_COMPAT_DATA_PATH="${PROTON_DIR}/prefix"

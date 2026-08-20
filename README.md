@@ -229,6 +229,16 @@ Two things on the Unraid side that this container cannot do for you:
 Use an editor that respects existing line endings — Notepad++ or VS Code rather
 than stock Notepad — for the larger ini files.
 
+### Passwords end up in the engine log
+
+This container prints `<query string hidden>` instead of the launch arguments,
+but ARK itself writes the whole command line — `ServerPassword` and
+`ServerAdminPassword` in clear text — into
+`ShooterGame/Saved/Logs/ShooterGame.log`. Nothing here can prevent that.
+
+Worth knowing before you paste a log into a forum or an issue, and a reason to
+treat that file as sensitive. `ServerAdminPassword` is also the RCON password.
+
 ## Stopping safely
 
 ARK writes its world on exit, so a hard kill is how people lose hours of

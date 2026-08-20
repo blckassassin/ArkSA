@@ -294,7 +294,13 @@ whichever build last worked.
 
 The container warns in its log whenever the Proton build in use is not the one
 the image was tested against, so a container still carrying an older
-`PROTON_VERSION` setting says so on every start rather than failing silently. Deleting `<serverfiles>/proton` forces a clean prefix rebuild, which is
+`PROTON_VERSION` setting says so on every start rather than failing silently.
+
+Changing `PROTON_VERSION` is enough on its own. A wine prefix belongs to the
+build that created it, so the container records which one that was and discards
+the prefix when it changes, letting Proton rebuild. You do not have to delete
+anything by hand, and your saves and configs are never involved — they live
+under `ShooterGame/Saved`, not in the prefix. Deleting `<serverfiles>/proton` forces a clean prefix rebuild, which is
 worth trying before anything drastic — that folder holds only the Proton build
 and the wine prefix, both of which are rebuilt automatically. Your saves and
 configs are under `ShooterGame/`, untouched.

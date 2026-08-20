@@ -240,6 +240,25 @@ export STEAM_COMPAT_CLIENT_INSTALL_PATH="${PROTON_DIR}/steam"
 export STEAM_COMPAT_DATA_PATH="${PROTON_DIR}/prefix"
 mkdir -p "${STEAM_COMPAT_CLIENT_INSTALL_PATH}" "${STEAM_COMPAT_DATA_PATH}"
 
+# A wine prefix belongs to the Proton build that created it, and handing one to
+# a different build fails in ways that are hard to read. Record who built it and
+# discard it when that changes, so switching PROTON_VERSION is enough on its own
+# - no one should have to know to go and delete a folder by hand.
+#
+# Nothing here needs preserving: saves and configs live under ShooterGame/Saved,
+# and Proton rebuilds the prefix on the next start.
+PREFIX_MARKER="${STEAM_COMPAT_DATA_PATH}/.created-by-proton"
+if [ -d "${STEAM_COMPAT_DATA_PATH}/pfx" ]; then
+    PREFIX_BUILT_BY="$(cat "${PREFIX_MARKER}" 2>/dev/null || echo "an unknown build")"
+    if [ "${PREFIX_BUILT_BY}" != "${PROTON_RESOLVED}" ]; then
+        echo "---Prefix was built by ${PREFIX_BUILT_BY}, now running ${PROTON_RESOLVED}---"
+        echo "---Discarding it so Proton rebuilds; saves and configs are untouched---"
+        rm -rf "${STEAM_COMPAT_DATA_PATH:?}"
+        mkdir -p "${STEAM_COMPAT_DATA_PATH}"
+    fi
+fi
+printf '%s' "${PROTON_RESOLVED}" > "${PREFIX_MARKER}" 2>/dev/null || true
+
 # -----------------------------------------------------------------------------
 # Game files
 # -----------------------------------------------------------------------------

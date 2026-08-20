@@ -76,4 +76,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ env.IMAGE }}
           short-description: "ARK: Survival Ascended dedicated server for Unraid — SteamCMD + GE-Proton"
-          readme-filepath: ./README.md
+          readme-filepath: ./docs/dockerhub.md

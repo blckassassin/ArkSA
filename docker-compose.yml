@@ -25,7 +25,7 @@ services:
       GAME_PORT: "7777"
       RCON_PORT: "27020"
       GAME_PARAMS_EXTRA: ""
-      PROTON_VERSION: "latest"
+      PROTON_VERSION: "GE-Proton10-34"
       VALIDATE: ""
       FIX_PERMS: "true"
       UMASK: "000"

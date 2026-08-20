@@ -130,7 +130,7 @@ Environment variables of note:
 | `GAME_PARAMS_EXTRA` | empty            | Extra dash flags, space separated.                                         |
 | `QUERY_PARAMS_EXTRA`| empty            | Extra `?key=value` pairs, no leading `?`.                                  |
 | `CLUSTER_ID`        | empty            | Same value on every server in a cluster.                                   |
-| `PROTON_VERSION`    | `latest`         | Or pin a tag like `GE-Proton9-27`.                                         |
+| `PROTON_VERSION`    | `GE-Proton10-34` | Pinned deliberately — see below. `latest` is opt-in.                       |
 | `VALIDATE`          | empty            | `true` makes SteamCMD verify every file on start. Slow.                    |
 | `STOP_TIMEOUT`      | `120`            | Seconds allowed for a graceful save before force kill.                     |
 | `FIX_PERMS`         | `true`           | Keeps the `Saved` tree editable over SMB. See below.                       |
@@ -285,8 +285,12 @@ sysctl -w vm.max_map_count=262144
 
 Add it to your `go` file to make it stick across reboots.
 
-**A Proton update broke something.** Pin `PROTON_VERSION` to the build that
-worked. Deleting `<serverfiles>/proton` forces a clean prefix rebuild, which is
+**A Proton update broke something.** `PROTON_VERSION` is already pinned to
+`GE-Proton10-34` rather than tracking `latest`, because the GE-Proton 11 series
+has a known regression with `ArkAscendedServer.exe`: startup fails before the
+engine emits any log output, so there is no error to go on. If you set
+`latest` and the server stops booting, that is the first thing to undo. Pin to
+whichever build last worked. Deleting `<serverfiles>/proton` forces a clean prefix rebuild, which is
 worth trying before anything drastic — that folder holds only the Proton build
 and the wine prefix, both of which are rebuilt automatically. Your saves and
 configs are under `ShooterGame/`, untouched.

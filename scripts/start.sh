@@ -54,6 +54,12 @@ fi
 # -----------------------------------------------------------------------------
 # Directories.
 # -----------------------------------------------------------------------------
+# wine logs "Failed to open /etc/machine-id" without this; debian-slim ships no
+# machine-id. Generated per container rather than baked into the image.
+if [ ! -s /etc/machine-id ]; then
+    head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n' > /etc/machine-id 2>/dev/null || true
+fi
+
 mkdir -p "${STEAMCMD_DIR}" "${SERVER_DIR}" "${PROTON_DIR}" /home/steam
 
 # A recursive chown over 60+ GB of ARK files on every boot is painful, so only do

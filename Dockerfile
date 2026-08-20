@@ -33,7 +33,6 @@ ENV DEBIAN_FRONTEND="noninteractive" \
     GID="100" \
     DATA_PERM="775" \
     CONFIG_UMASK="" \
-    CONFIG_PERM="" \
     FIX_PERMS="true" \
     UMASK="000" \
     STOP_TIMEOUT="120" \

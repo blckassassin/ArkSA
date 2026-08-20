@@ -78,14 +78,6 @@ fix_share_perms() {
 
     resolve_config_modes
 
-    if [ -n "${CONFIG_PERM:-}" ]; then
-        # Escape hatch for anything a umask cannot express. Symbolic chmod only
-        # adds or removes bits, so -R is safe to use directly here.
-        chmod -R "${CONFIG_PERM}" "${SAVED_DIR}" 2>/dev/null
-        chmod "${CONFIG_PERM}" "${GAME_ROOT}" 2>/dev/null
-        return 0
-    fi
-
     # The parent chain gets the directory mode too, otherwise a permissive
     # config folder still sits behind an unreachable parent.
     chmod "${CONFIG_DIR_MODE}" "${GAME_ROOT}" 2>/dev/null
@@ -295,11 +287,7 @@ fi
 
 if [ "${FIX_PERMS,,}" = "true" ]; then
     resolve_config_modes
-    if [ -n "${CONFIG_PERM:-}" ]; then
-        echo "---Applying CONFIG_PERM '${CONFIG_PERM}' to ${SAVED_DIR}---"
-    else
-        echo "---Applying umask ${CONFIG_UMASK_EFFECTIVE} to ${SAVED_DIR} (files ${CONFIG_FILE_MODE}, dirs ${CONFIG_DIR_MODE})---"
-    fi
+    echo "---Applying umask ${CONFIG_UMASK_EFFECTIVE} to ${SAVED_DIR} (files ${CONFIG_FILE_MODE}, dirs ${CONFIG_DIR_MODE})---"
 fi
 fix_share_perms
 

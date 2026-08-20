@@ -135,7 +135,6 @@ Environment variables of note:
 | `STOP_TIMEOUT`      | `120`            | Seconds allowed for a graceful save before force kill.                     |
 | `FIX_PERMS`         | `true`           | Keeps the `Saved` tree editable over SMB. See below.                       |
 | `CONFIG_UMASK`      | inherits `UMASK` | umask applied to the `Saved` tree. See below.                              |
-| `CONFIG_PERM`       | unset            | Optional chmod expression; overrides `CONFIG_UMASK` when set.              |
 | `DATA_PERM`         | `775`            | Mode on the top-level server files folder.                                 |
 | `UMASK`             | `000`            | New files 666, new directories 777.                                        |
 
@@ -214,9 +213,9 @@ of what you asked for, so pick them deliberately.
 An invalid value falls back to `000` with a warning in the log rather than
 failing the boot.
 
-`CONFIG_PERM` remains as an escape hatch for anything a umask cannot express —
-set it to a chmod expression like `g+rwX` and it overrides `CONFIG_UMASK`. Set
-`FIX_PERMS=false` to skip the pass entirely and manage permissions yourself.
+`CONFIG_UMASK` sets what the modes become; `FIX_PERMS` decides whether the pass
+runs at all. Set `FIX_PERMS=false` to skip it entirely and manage permissions
+yourself — there is no umask value that means "leave these alone".
 
 Two things on the Unraid side that this container cannot do for you:
 

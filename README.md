@@ -256,7 +256,10 @@ Steam64 ID.
 
 Set the same `CLUSTER_ID` on each container and point every one of them at a
 shared `CLUSTER_DIR` (map the same host path into each container). Give each
-server its own `GAME_PORT` and its own serverfiles path.
+server its own `GAME_PORT`, its own serverfiles path, **and its own Proton
+path** — that folder holds the wine prefix as well as the Proton build, and two
+running servers cannot share one prefix. The SteamCMD folder is the exception:
+it is only a downloader, so pointing every container at the same one is fine.
 
 ## Troubleshooting
 

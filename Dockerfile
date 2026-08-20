@@ -40,6 +40,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
     UMASK="000" \
     STOP_TIMEOUT="120" \
     LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/usr/lib32" \
+    DEBUG="false" \
     WINEDEBUG="-all" \
     DXVK_HUD="0" \
     PROTON_USE_WINED3D="1" \

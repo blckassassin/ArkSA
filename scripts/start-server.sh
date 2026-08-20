@@ -236,6 +236,19 @@ if [ -n "${PROTON_TESTED:-}" ] && [ "${PROTON_RESOLVED%-x86_64}" != "${PROTON_TE
     echo "---delete ${PROTON_DIR} so the prefix is rebuilt.---"
 fi
 
+# WINEDEBUG=-all silences exactly the output you need when the server dies
+# during startup, so DEBUG=true turns it back on and captures Proton's own log.
+# +loaddll matters most here: when a Windows binary dies before reaching its own
+# logging, the last DLL it loaded is usually the whole diagnosis.
+if [ "${DEBUG,,}" = "true" ]; then
+    export PROTON_LOG=1
+    export PROTON_LOG_DIR="${SERVER_DIR}/logs"
+    export WINEDEBUG="${WINEDEBUG_OVERRIDE:-+err,+fixme,+loaddll}"
+    mkdir -p "${PROTON_LOG_DIR}"
+    echo "---DEBUG is on: verbose wine output below, Proton log in ${PROTON_LOG_DIR}---"
+    echo "---Turn it off once you have what you need; it is noisy and slows startup---"
+fi
+
 export STEAM_COMPAT_CLIENT_INSTALL_PATH="${PROTON_DIR}/steam"
 export STEAM_COMPAT_DATA_PATH="${PROTON_DIR}/prefix"
 mkdir -p "${STEAM_COMPAT_CLIENT_INSTALL_PATH}" "${STEAM_COMPAT_DATA_PATH}"
@@ -421,6 +434,15 @@ EXIT_CODE=$?
 
 if [ "${SHUTTING_DOWN}" = "false" ]; then
     echo "---Server exited on its own with code ${EXIT_CODE}---"
+    # A server that dies before writing an engine log failed in Proton or in
+    # loading the binary, not in ARK itself. Saying which narrows it a lot.
+    if [ -s "${SAVED_DIR}/Logs/ShooterGame.log" ]; then
+        echo "---Last lines of ShooterGame.log:---"
+        tail -n 15 "${SAVED_DIR}/Logs/ShooterGame.log" 2>/dev/null
+    else
+        echo "---No engine log was written, so it failed before ARK started.---"
+        echo "---Set DEBUG=true and restart to capture wine and Proton output.---"
+    fi
     fix_share_perms
 fi
 exit "${EXIT_CODE}"

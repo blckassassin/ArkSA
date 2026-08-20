@@ -132,6 +132,7 @@ Environment variables of note:
 | `CLUSTER_ID`        | empty            | Same value on every server in a cluster.                                   |
 | `PROTON_VERSION`    | `GE-Proton10-34` | Pinned deliberately — see below. `latest` is opt-in.                       |
 | `VALIDATE`          | empty            | `true` makes SteamCMD verify every file on start. Slow.                    |
+| `DEBUG`             | `false`          | `true` captures verbose wine output and a Proton log. See below.           |
 | `STOP_TIMEOUT`      | `120`            | Seconds allowed for a graceful save before force kill.                     |
 | `FIX_PERMS`         | `true`           | Keeps the `Saved` tree editable over SMB. See below.                       |
 | `CONFIG_UMASK`      | inherits `UMASK` | umask applied to the `Saved` tree. See below.                              |

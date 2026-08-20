@@ -257,6 +257,31 @@ export SteamAppId="${GAME_ID}"
 export SteamGameId="${GAME_ID}"
 export STEAM_COMPAT_APP_ID="${GAME_ID}"
 
+# Proton's lsteamclient bridges the game's Windows Steam API calls to the
+# native Linux steamclient.so, and it looks for that in exactly two places:
+#
+#   $HOME/.steam/sdk64/steamclient.so
+#   $HOME/.steam/sdk32/steamclient.so
+#
+# (lsteamclient/unixlib.cpp). That is the long-standing convention for
+# Steamworks dedicated servers. Miss it and lsteamclient does not fail softly -
+# it asserts, aborting the process the moment the game first touches the Steam
+# API, which for ASA is a second or so after startup. SteamCMD ships both
+# libraries once it has run, so link them into place.
+link_steam_sdk() {
+    local bits src dst
+    for bits in 64 32; do
+        src="${STEAMCMD_DIR}/linux${bits}/steamclient.so"
+        dst="${HOME}/.steam/sdk${bits}"
+        if [ -f "${src}" ]; then
+            mkdir -p "${dst}" 2>/dev/null || continue
+            ln -sfn "${src}" "${dst}/steamclient.so" 2>/dev/null || true
+        else
+            echo "---Note: ${src} is missing; the Steam API bridge may not load---"
+        fi
+    done
+}
+
 export STEAM_COMPAT_CLIENT_INSTALL_PATH="${PROTON_DIR}/steam"
 export STEAM_COMPAT_DATA_PATH="${PROTON_DIR}/prefix"
 mkdir -p "${STEAM_COMPAT_CLIENT_INSTALL_PATH}" "${STEAM_COMPAT_DATA_PATH}"
@@ -310,6 +335,8 @@ fi
 if [ "${STEAM_RC}" -ne 0 ]; then
     echo "---SteamCMD exited ${STEAM_RC}, continuing with the files already on disk---"
 fi
+
+link_steam_sdk
 
 echo "---Config directory: ${CONFIG_DIR}---"
 

@@ -286,6 +286,14 @@ sysctl -w vm.max_map_count=262144
 
 Add it to your `go` file to make it stick across reboots.
 
+**Server exits a second after startup, engine log stops after Sentry.** That is
+Proton's `lsteamclient` failing to find the native `steamclient.so` and
+aborting the process. It looks for `~/.steam/sdk64/steamclient.so`, which the
+container links from SteamCMD automatically. If you see
+`unable to load native steamclient library` in a `DEBUG=true` log, check that
+SteamCMD actually finished its first run — the libraries only appear after it
+has downloaded its own payload.
+
 **A Proton update broke something.** `PROTON_VERSION` is already pinned to
 `GE-Proton10-34` rather than tracking `latest`, because the GE-Proton 11 series
 has a known regression with `ArkAscendedServer.exe`: startup fails before the

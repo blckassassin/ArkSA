@@ -9,18 +9,19 @@
   <Support>https://github.com/blckassassin/ArkSA/issues</Support>
   <Project>https://github.com/blckassassin/ArkSA</Project>
   <Overview>
-    ARK: Survival Ascended dedicated server.
+ARK: Survival Ascended dedicated server.
 
-    ASA ships Windows-only server binaries, so this container installs the Windows depot with SteamCMD and runs it under GE-Proton. Both SteamCMD and Proton are fetched on first start, so the image itself stays small.
+ASA ships Windows-only server binaries, so this container installs the Windows depot with SteamCMD and runs it under GE-Proton. Both SteamCMD and Proton are fetched on first start, so the image itself stays small.
 
-    Heads up before you start: the game files are roughly 60GB and the server wants a lot of RAM (16GB is a sensible floor for a vanilla map, more with mods or players). Put the appdata on an SSD or a cache pool, not on the array.
+Heads up before you start: the game files are roughly 60GB and the server wants a lot of RAM (16GB is a sensible floor for a vanilla map, more with mods or players). Put the appdata on an SSD or a cache pool, not on the array.
 
-    First boot downloads ~60GB and then builds a Proton prefix. Expect a long, quiet startup - check the logs rather than assuming it hung.
+First boot downloads ~60GB and then builds a Proton prefix. Expect a long, quiet startup - check the logs rather than assuming it hung.
 
-    Config files are kept editable over SMB. A "config" shortcut is created at the top of the game files folder pointing at ShooterGame/Saved/Config/WindowsServer, so you can browse straight to it from Windows. Stop the container before editing - the server rewrites GameUserSettings.ini when it shuts down and will overwrite changes made while it is running.
+Config files are kept editable over SMB. A "config" shortcut is created at the top of the game files folder pointing at ShooterGame/Saved/Config/WindowsServer, so you can browse straight to it from Windows. Stop the container before editing - the server rewrites GameUserSettings.ini when it shuts down and will overwrite changes made while it is running.
 
-    Only 7777/udp needs forwarding at your router. The old 27015 query port is vestigial in ASA because server discovery goes through Epic Online Services rather than Steam. Forward RCON only if you administer from outside your LAN.
-  </Overview>
+Only 7777/udp needs forwarding at your router. The old 27015 query port is vestigial in ASA because server discovery goes through Epic Online Services rather than Steam. Forward RCON only if you administer from outside your LAN.
+
+</Overview>
   <Category>GameServers:</Category>
   <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/templates/ark-survival-ascended.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/icon.png</Icon>

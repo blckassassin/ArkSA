@@ -19,6 +19,7 @@ SAVED_DIR=""
 CONFIG_DIR=""
 
 SERVER_PID=""
+LOG_TAIL_PID=""
 SHUTTING_DOWN="false"
 CONFIG_UMASK_EFFECTIVE=""
 
@@ -413,6 +414,12 @@ wineserver_kill() {
     fi
 }
 
+stop_log_tail() {
+    [ -n "${LOG_TAIL_PID}" ] || return 0
+    kill "${LOG_TAIL_PID}" 2>/dev/null || true
+    LOG_TAIL_PID=""
+}
+
 graceful_shutdown() {
     [ "${SHUTTING_DOWN}" = "true" ] && return
     SHUTTING_DOWN="true"
@@ -446,6 +453,7 @@ graceful_shutdown() {
     # those new files are editable over the share too.
     fix_share_perms
 
+    stop_log_tail
     echo "---Server stopped---"
     exit 0
 }
@@ -461,20 +469,29 @@ echo "---Starting ${MAP} on port ${GAME_PORT}, cap ${MAX_PLAYERS}---"
 echo "---Launch line: ${SERVER_EXE} <query string hidden> ${FLAGS[*]}---"
 echo "---First boot builds the Proton prefix and can sit quiet for several minutes---"
 
+# Mirror the engine log into the container log, so the Unraid "Logs" button and
+# `docker logs` show what the server is actually doing instead of only this
+# script's own messages. ARK replaces ShooterGame.log on each start rather than
+# appending, and `tail -F` follows by name: starting at -n 0 skips the previous
+# run's contents, then it reopens the new file and reads it from the beginning.
+ENGINE_LOG="${SAVED_DIR}/Logs/ShooterGame.log"
+mkdir -p "$(dirname "${ENGINE_LOG}")" 2>/dev/null || true
+tail -F -n 0 "${ENGINE_LOG}" 2>/dev/null &
+LOG_TAIL_PID=$!
+
 "${PROTON_BIN}" run "./${SERVER_EXE}" "${QUERY}" "${FLAGS[@]}" &
 SERVER_PID=$!
 
 wait "${SERVER_PID}"
 EXIT_CODE=$?
 
+stop_log_tail
+
 if [ "${SHUTTING_DOWN}" = "false" ]; then
     echo "---Server exited on its own with code ${EXIT_CODE}---"
     # A server that dies before writing an engine log failed in Proton or in
     # loading the binary, not in ARK itself. Saying which narrows it a lot.
-    if [ -s "${SAVED_DIR}/Logs/ShooterGame.log" ]; then
-        echo "---Last lines of ShooterGame.log:---"
-        tail -n 15 "${SAVED_DIR}/Logs/ShooterGame.log" 2>/dev/null
-    else
+    if [ ! -s "${SAVED_DIR}/Logs/ShooterGame.log" ]; then
         echo "---No engine log was written, so it failed before ARK started.---"
         echo "---Set DEBUG=true and restart to capture wine and Proton output.---"
     fi

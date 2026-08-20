@@ -231,6 +231,16 @@ Two things on the Unraid side that this container cannot do for you:
 Use an editor that respects existing line endings — Notepad++ or VS Code rather
 than stock Notepad — for the larger ini files.
 
+### Watching the server
+
+The engine log is streamed into the container log, so ARK's own output appears
+under **Logs** on the Unraid Docker tab, or via `docker logs`, alongside this
+container's `---...---` messages. You do not need shell access to see what the
+server is doing.
+
+The file itself is still at `ShooterGame/Saved/Logs/ShooterGame.log` if you want
+to search back through it.
+
 ### Passwords end up in the engine log
 
 This container prints `<query string hidden>` instead of the launch arguments,

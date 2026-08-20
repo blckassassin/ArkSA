@@ -261,8 +261,14 @@ This depends on RCON being enabled in `GameUserSettings.ini`. If you disable it,
 you lose the safe shutdown.
 
 **On Unraid, raise the container stop timeout** (Settings → Docker →
-*Default shutdown time-out*) to something above your `STOP_TIMEOUT`, or Unraid
-will pull the rug out mid-save during an array stop.
+*Default shutdown time-out*) to something above your `STOP_TIMEOUT`. Unraid's
+default is far shorter than a graceful ARK shutdown takes, so it will SIGKILL
+the container partway through.
+
+You can tell this has happened: the log reaches `---Sending DoExit---` and then
+just stops, without `---Server stopped---`. The save itself completes before
+that point — `World Saved` comes back from RCON first — so it is not data loss,
+but the server never gets to shut down cleanly.
 
 ## RCON from the command line
 

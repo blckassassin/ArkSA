@@ -436,14 +436,21 @@ graceful_shutdown() {
         echo "---No RCON available, stopping the process directly---"
     fi
 
+    # Say something while waiting. A silent gap of up to STOP_TIMEOUT seconds
+    # reads as a hang, and this is exactly when someone is deciding whether to
+    # pull the plug on a server that is mid-save.
     local waited=0
     while kill -0 "${SERVER_PID}" 2>/dev/null && [ "${waited}" -lt "${STOP_TIMEOUT}" ]; do
         sleep 2
         waited=$((waited + 2))
+        if [ $((waited % 10)) -eq 0 ]; then
+            echo "---Waiting for the server to exit (${waited}s of ${STOP_TIMEOUT}s)---"
+        fi
     done
 
     if kill -0 "${SERVER_PID}" 2>/dev/null; then
         echo "---Still running after ${STOP_TIMEOUT}s, killing the wine prefix---"
+        echo "---The world was already saved above, so this is not data loss---"
         wineserver_kill
         sleep 5
         kill -9 "${SERVER_PID}" 2>/dev/null || true

@@ -256,10 +256,10 @@ Steam64 ID.
 
 Set the same `CLUSTER_ID` on each container and point every one of them at a
 shared `CLUSTER_DIR` (map the same host path into each container). Give each
-server its own `GAME_PORT`, its own serverfiles path, **and its own Proton
-path** — that folder holds the wine prefix as well as the Proton build, and two
-running servers cannot share one prefix. The SteamCMD folder is the exception:
-it is only a downloader, so pointing every container at the same one is fine.
+server its own `GAME_PORT` and its own serverfiles path. Proton lives inside
+that folder, so each server automatically gets its own wine prefix — two
+servers cannot end up sharing one. The SteamCMD folder is the exception: it is
+only a downloader, so pointing every container at the same one is fine.
 
 ## Troubleshooting
 
@@ -286,8 +286,10 @@ sysctl -w vm.max_map_count=262144
 Add it to your `go` file to make it stick across reboots.
 
 **A Proton update broke something.** Pin `PROTON_VERSION` to the build that
-worked. Deleting the proton appdata folder forces a clean prefix rebuild, which
-is worth trying before anything drastic — it does not touch your saves.
+worked. Deleting `<serverfiles>/proton` forces a clean prefix rebuild, which is
+worth trying before anything drastic — that folder holds only the Proton build
+and the wine prefix, both of which are rebuilt automatically. Your saves and
+configs are under `ShooterGame/`, untouched.
 
 **SteamCMD keeps failing partway.** Steam's CDN deprioritises anonymous logins
 under load. Set `VALIDATE=true` and restart; it resumes rather than starting

@@ -37,4 +37,3 @@ services:
     volumes:
       - ./data/serverfiles:/serverdata/serverfiles
       - ./data/steamcmd:/serverdata/steamcmd
-      - ./data/proton:/serverdata/proton

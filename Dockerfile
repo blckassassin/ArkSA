@@ -10,7 +10,7 @@ LABEL org.opencontainers.image.title="ARK: Survival Ascended Dedicated Server" \
 ENV DEBIAN_FRONTEND="noninteractive" \
     STEAMCMD_DIR="/serverdata/steamcmd" \
     SERVER_DIR="/serverdata/serverfiles" \
-    PROTON_DIR="/serverdata/proton" \
+    PROTON_DIR="/serverdata/serverfiles/proton" \
     GAME_ID="2430930" \
     GAME_PORT="7777" \
     QUERY_PORT="27015" \
@@ -99,7 +99,9 @@ RUN chmod -R 755 /opt/scripts
 # 27020/tcp RCON, only if you administer remotely
 EXPOSE 7777/udp 7778/udp 27015/udp 27020/tcp
 
-VOLUME ["/serverdata/steamcmd", "/serverdata/serverfiles", "/serverdata/proton"]
+# Proton lives inside serverfiles, so it must NOT be declared here: a nested
+# VOLUME would shadow the parent mount.
+VOLUME ["/serverdata/steamcmd", "/serverdata/serverfiles"]
 
 # No -g here on purpose: process-group signalling would SIGTERM the wine
 # processes directly and defeat the save-then-exit handler in start-server.sh.

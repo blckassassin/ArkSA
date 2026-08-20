@@ -45,7 +45,7 @@ echo "---Open file limit set to $(ulimit -n)---"
 # but it does nothing for files that already exist - a migrated install, or
 # anything wine created with a tighter mode - so the config tree gets an explicit
 # recursive pass on every start. It is only the config and save data, not the
-# ~60GB of binaries, so this stays cheap.
+# game binaries, so this stays cheap.
 # -----------------------------------------------------------------------------
 # Turn a umask into the two modes it implies, exactly as the kernel does at
 # creation time: files start from 0666, directories from 0777, umask bits come
@@ -329,7 +329,7 @@ STEAM_RC=$?
 
 if ! locate_game_dirs; then
     echo "---${SERVER_EXE} is missing after the SteamCMD run (exit ${STEAM_RC})---"
-    echo "---The ASA depot is ~60GB, check free space and your appdata path---"
+    echo "---The ASA depot is ~13GB, check free space and your appdata path---"
     exit 1
 fi
 if [ "${STEAM_RC}" -ne 0 ]; then

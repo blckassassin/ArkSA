@@ -1,4 +1,4 @@
-# The build only needs scripts/. Keep the 60GB data tree and the docs out of
+# The build only needs scripts/. Keep the data tree and the docs out of
 # the context so `docker build` does not spend minutes uploading them.
 *
 !scripts/

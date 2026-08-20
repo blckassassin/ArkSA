@@ -35,7 +35,7 @@ python3 -m py_compile scripts/rcon.py
 ```
 
 Then a smoke run, which should reach the SteamCMD step and print the resolved
-uid/gid. Stop it there — a full boot downloads ~60GB.
+uid/gid. Stop it there — a full boot downloads ~13GB of game files.
 
 ```sh
 docker run --rm -e UID=1000 -e GID=1000 asa-test

@@ -63,13 +63,15 @@ package to install or keep current just to send `SaveWorld`.
 
 ## Before you start
 
-- **Disk:** the depot is roughly 60GB. Put it on a cache pool or SSD share, not
-  on the array.
+- **Disk:** about 15GB installed, growing with saves and mods. Put it on a cache
+  pool or SSD share rather than the array — not for the space, but because ARK
+  is heavy on random I/O and spinning disks make startup and world saves
+  noticeably slower.
 - **RAM:** 16GB is a sensible floor for a vanilla map. Mods and players push it
   well past that. ASA is considerably hungrier than ASE.
-- **First boot is slow and quiet.** A ~60GB download, then Proton builds its
-  prefix, then the server does its own startup. Watch the logs rather than
-  assuming it has hung.
+- **First boot is slow and quiet.** A ~13GB download, then Proton builds its
+  prefix, then the server does its own startup — around 45 seconds once the
+  files are in place. Watch the logs rather than assuming it has hung.
 
 ## Get the image
 

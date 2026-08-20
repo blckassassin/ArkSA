@@ -13,9 +13,9 @@ ARK: Survival Ascended dedicated server.
 
 ASA ships Windows-only server binaries, so this container installs the Windows depot with SteamCMD and runs it under GE-Proton. Both SteamCMD and Proton are fetched on first start, so the image itself stays small.
 
-Heads up before you start: the game files are roughly 60GB and the server wants a lot of RAM (16GB is a sensible floor for a vanilla map, more with mods or players). Put the appdata on an SSD or a cache pool, not on the array.
+Heads up before you start: the game files are about 15GB installed and the server wants a lot of RAM (16GB is a sensible floor for a vanilla map, more with mods or players). Put the appdata on an SSD or a cache pool rather than the array - not for the space, but because ARK is heavy on random I/O and spinning disks make startup and world saves noticeably slower.
 
-First boot downloads ~60GB and then builds a Proton prefix. Expect a long, quiet startup - check the logs rather than assuming it hung.
+First boot downloads about 13GB and then builds a Proton prefix. Expect a long, quiet first startup - check the logs rather than assuming it hung. Once the files are in place the server starts in well under a minute.
 
 Config files are kept editable over SMB. A "config" shortcut is created at the top of the game files folder pointing at ShooterGame/Saved/Config/WindowsServer, so you can browse straight to it from Windows. Stop the container before editing - the server rewrites GameUserSettings.ini when it shuts down and will overwrite changes made while it is running.
 
@@ -30,16 +30,14 @@ Only 7777/udp needs forwarding at your router. The old 27015 query port is vesti
   <ExtraSearchTerms>ark survival ascended asa dedicated server steamcmd proton</ExtraSearchTerms>
   <Changes>Initial release.</Changes>
   <ExtraParams>--restart=unless-stopped --ulimit nofile=1048576:1048576</ExtraParams>
-  <Requires>Roughly 60GB of free space for the game files, and 16GB RAM as a
-  practical floor for a vanilla map. Put the appdata on a cache pool or SSD
-  share rather than the array.</Requires>
+  <Requires>About 15GB of disk for the game files, and 16GB RAM as a practical floor for a vanilla map - a stock TheIsland_WP server settles around 10GB. Put the appdata on a cache pool or SSD share rather than the array: ARK is heavy on random I/O, so spinning disks slow startup and world saves.</Requires>
 
   <Config Name="Game Port" Target="7777" Default="7777" Mode="udp" Description="Game traffic. This is the one that has to be forwarded." Type="Port" Display="always" Required="true" Mask="false">7777</Config>
   <Config Name="Peer Port" Target="7778" Default="7778" Mode="udp" Description="Game port + 1. Not normally required, but cheap to forward if players report flaky connects." Type="Port" Display="always" Required="false" Mask="false">7778</Config>
   <Config Name="Query Port" Target="27015" Default="27015" Mode="udp" Description="Legacy Steam query port. Vestigial in ASA - discovery runs through EOS. Left here for tooling that expects it." Type="Port" Display="advanced" Required="false" Mask="false">27015</Config>
   <Config Name="RCON Port" Target="27020" Default="27020" Mode="tcp" Description="Source RCON. Only forward at the router if you administer remotely, and never without a strong admin password." Type="Port" Display="always" Required="false" Mask="false">27020</Config>
 
-  <Config Name="Game Files" Target="/serverdata/serverfiles" Default="/mnt/cache/appdata/ark-survival-ascended" Mode="rw" Description="Where the ~60GB of server files, saves and configs live. Use a cache pool or SSD share." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/ark-survival-ascended</Config>
+  <Config Name="Game Files" Target="/serverdata/serverfiles" Default="/mnt/cache/appdata/ark-survival-ascended" Mode="rw" Description="Where the server files, saves and configs live - about 15GB. Use a cache pool or SSD share: ARK is heavy on random I/O and spinning disks slow startup and world saves." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/ark-survival-ascended</Config>
   <Config Name="SteamCMD" Target="/serverdata/steamcmd" Default="/mnt/cache/appdata/steamcmd" Mode="rw" Description="Shared SteamCMD install. Safe to point several game containers at the same folder." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/steamcmd</Config>
 
   <Config Name="Server Name" Target="SERVER_NAME" Default="ASA Server" Mode="" Description="Session name shown in the Unofficial server list." Type="Variable" Display="always" Required="true" Mask="false">ASA Server</Config>

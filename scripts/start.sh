@@ -60,12 +60,12 @@ if [ ! -s /etc/machine-id ]; then
     head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n' > /etc/machine-id 2>/dev/null || true
 fi
 
-mkdir -p "${STEAMCMD_DIR}" "${SERVER_DIR}" "${PROTON_DIR}" /home/steam
+mkdir -p "${STEAMCMD_DIR}" "${SERVER_DIR}" "${PROTON_DIR}" "${SERVER_DIR}/home"
 
 # A recursive chown over 60+ GB of ARK files on every boot is painful, so only do
 # the deep pass when the top-level owner actually looks wrong. Set
 # FORCE_CHOWN=true to run it unconditionally if permissions ever get tangled.
-for DIR in "${STEAMCMD_DIR}" "${SERVER_DIR}" "${PROTON_DIR}" /home/steam; do
+for DIR in "${STEAMCMD_DIR}" "${SERVER_DIR}" "${PROTON_DIR}" "${SERVER_DIR}/home"; do
     if [ "$(stat -c %u "${DIR}")" != "${TARGET_UID}" ] || [ "${FORCE_CHOWN:-false}" = "true" ]; then
         echo "---Fixing ownership on ${DIR} (slow the first time, this is normal)---"
         chown -R "${TARGET_UID}:${TARGET_GID}" "${DIR}"

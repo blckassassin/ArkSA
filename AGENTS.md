@@ -56,5 +56,12 @@ docker run --rm -e UID=1000 -e GID=1000 asa-test
   real settings; `?MaxPlayers=` and `?Port=` are silently ignored by ASA.
 - **The config seed is write-once.** `GameUserSettings.ini` is written only when
   absent. Never make the container rewrite a file the user may have edited.
+- **`HOME` is repointed at `<serverfiles>/home`.** `gosu` sets it from passwd,
+  so `start-server.sh` overrides it after the privilege drop, not via `ENV`.
+  SteamCMD's `depotcache` lives there and holds the manifest an incremental
+  update diffs against. On the default `/home/steam` it is lost whenever the
+  container is recreated, and the next update dies with `Access Denied` on the
+  delta-source manifest because Steam does not issue request codes for
+  superseded manifests. Do not move it back.
 - **Graceful shutdown depends on RCON.** `SaveWorld` then `DoExit` over RCON,
   then a timed wait, then kill the wine prefix. A hard kill loses world state.

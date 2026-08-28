@@ -8,6 +8,17 @@
 set -u
 umask "${UMASK:-000}"
 
+# SteamCMD keeps its state under $HOME, including depotcache - the manifests an
+# incremental update diffs against. gosu points $HOME at /home/steam, which is
+# in the container's writable layer and so is destroyed whenever the container
+# is recreated from a new image. Without the cached manifest SteamCMD has to
+# ask Steam for it, and Steam refuses request codes for any manifest that is no
+# longer the published one, which cancels the update outright and strands the
+# server on its old build. Keep the cache on the same volume as the install it
+# describes. This must be exported after gosu, which sets HOME from passwd.
+export HOME="${SERVER_DIR}/home"
+mkdir -p "${HOME}"
+
 STEAMCMD_URL="https://media.steampowered.com/client/installer/steamcmd_linux.tar.gz"
 PROTON_API="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest"
 SERVER_EXE="ArkAscendedServer.exe"
@@ -312,22 +323,60 @@ printf '%s' "${PROTON_RESOLVED}" > "${PREFIX_MARKER}" 2>/dev/null || true
 # -----------------------------------------------------------------------------
 echo "---Checking for ARK: Survival Ascended updates---"
 
-STEAM_ARGS=( "+@sSteamCmdForcePlatformType" "windows" "+force_install_dir" "${SERVER_DIR}" )
-if [ -n "${USERNAME}" ]; then
-    STEAM_ARGS+=( "+login" "${USERNAME}" "${PASSWRD}" )
-else
-    STEAM_ARGS+=( "+login" "anonymous" )
-fi
+STEAM_LOG="${HOME}/Steam/logs/content_log.txt"
+STEAM_MANIFEST="${SERVER_DIR}/steamapps/appmanifest_${GAME_ID}.acf"
+
+run_steamcmd() {
+    local args=( "+@sSteamCmdForcePlatformType" "windows" "+force_install_dir" "${SERVER_DIR}" )
+    if [ -n "${USERNAME}" ]; then
+        args+=( "+login" "${USERNAME}" "${PASSWRD}" )
+    else
+        args+=( "+login" "anonymous" )
+    fi
+    args+=( "+app_update" "${GAME_ID}" )
+    if [ "${1:-}" = "validate" ]; then
+        args+=( "validate" )
+    fi
+    args+=( "+quit" )
+    "${STEAMCMD_DIR}/steamcmd.sh" "${args[@]}"
+}
+
+# Where the log ends now, so the retry check below only reads this run's lines.
+STEAM_LOG_MARK=0
+[ -f "${STEAM_LOG}" ] && STEAM_LOG_MARK="$(wc -l < "${STEAM_LOG}")"
+
 if [ "${VALIDATE,,}" = "true" ]; then
     echo "---Validate is enabled, this pass will take longer---"
-    STEAM_ARGS+=( "+app_update" "${GAME_ID}" "validate" )
+    run_steamcmd validate
 else
-    STEAM_ARGS+=( "+app_update" "${GAME_ID}" )
+    run_steamcmd
 fi
-STEAM_ARGS+=( "+quit" )
-
-"${STEAMCMD_DIR}/steamcmd.sh" "${STEAM_ARGS[@]}"
 STEAM_RC=$?
+
+# SteamCMD truncates content_log.txt when it grows, which would leave the mark
+# past the end of the file and silently disable the recovery below. If the log
+# shrank, the mark means nothing - read the whole file.
+STEAM_LOG_NOW=0
+[ -f "${STEAM_LOG}" ] && STEAM_LOG_NOW="$(wc -l < "${STEAM_LOG}")"
+[ "${STEAM_LOG_NOW}" -lt "${STEAM_LOG_MARK}" ] && STEAM_LOG_MARK=0
+
+# Steam stops issuing manifest request codes for a depot's old manifest once a
+# new build ships. SteamCMD asks for the installed manifest as the delta source,
+# is refused with 'Access Denied', and cancels the update rather than falling
+# back to a plain download - so it moves zero bytes, leaves the app flagged
+# update-required, and every later start fails identically. VALIDATE does not
+# help; the request comes first. The stale pointer is the appmanifest's
+# InstalledDepots entry, so drop the file and there is nothing to delta from.
+# Seen on 2026-08-27 going from build 24827022 to 24976862.
+if [ "${STEAM_RC}" -ne 0 ] && [ -f "${STEAM_MANIFEST}" ] && \
+   tail -n "+$((STEAM_LOG_MARK + 1))" "${STEAM_LOG}" 2>/dev/null \
+   | grep -q "Failed to get manifest request code"; then
+    echo "---Steam refused the delta source: this build's installed manifest is retired---"
+    echo "---Dropping the stale appmanifest and retrying with validate---"
+    mv "${STEAM_MANIFEST}" "${STEAM_MANIFEST}.stale"
+    run_steamcmd validate
+    STEAM_RC=$?
+fi
 
 if ! locate_game_dirs; then
     echo "---${SERVER_EXE} is missing after the SteamCMD run (exit ${STEAM_RC})---"

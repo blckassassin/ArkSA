@@ -356,6 +356,24 @@ configs are under `ShooterGame/`, untouched.
 under load. Set `VALIDATE=true` and restart; it resumes rather than starting
 over.
 
+**The update never starts at all — `state is 0x6`, `0 / 0` bytes.** Steam stops
+issuing manifest request codes for a depot's old manifest once a new build
+ships, and SteamCMD asks for the installed manifest as its delta source before
+it downloads anything. Once that manifest is retired the request comes back
+`Access Denied` and the whole update is cancelled, so the server keeps booting
+the old build no matter how often you restart. `VALIDATE=true` does not help,
+because the delta-source request happens first. The container recognises this
+and recovers on its own: it moves `steamapps/appmanifest_<appid>.acf` aside —
+that file is where the stale manifest is recorded — and retries with validate,
+keeping the displaced file as `.stale`. Your saves and configs are not involved.
+
+What puts you in that position is losing SteamCMD's `depotcache`, which holds
+the manifest an incremental update diffs against. Normally it is read from disk
+and Steam is never asked. SteamCMD keeps it under `$HOME`, so the container
+points `HOME` at `<serverfiles>/home` to keep it on a mapped volume; left at the
+default it would live in the container's writable layer and be destroyed every
+time the container is recreated from a new image.
+
 ## Credit
 
 The structure, environment variable naming and general Unraid ergonomics here

@@ -1,4 +1,7 @@
-# The build only needs scripts/. Keep the data tree and the docs out of
-# the context so `docker build` does not spend minutes uploading them.
+# The build only needs the entrypoint and the game's own scripts. Keep the data
+# tree, the docs and the other games out of the context.
+#
+# Every new game must add nothing here: games/*/scripts/ already covers it.
 *
-!scripts/
+!shared/scripts/
+!games/*/scripts/

@@ -92,7 +92,8 @@ ENV LANG="en_US.UTF-8" \
     LANGUAGE="en_US:en" \
     LC_ALL="en_US.UTF-8"
 
-COPY scripts/ /opt/scripts/
+COPY shared/scripts/ /opt/scripts/
+COPY games/ark-survival-ascended/scripts/ /opt/scripts/
 RUN chmod -R 755 /opt/scripts
 
 # 7777/udp  game traffic (required)

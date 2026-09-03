@@ -1,6 +1,8 @@
 services:
   ark-survival-ascended:
-    build: .
+    build:
+      context: ../..
+      dockerfile: games/ark-survival-ascended/Dockerfile
     image: ferment9348/ark-survival-ascended:latest
     container_name: ark-survival-ascended
     restart: unless-stopped

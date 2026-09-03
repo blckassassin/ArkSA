@@ -60,12 +60,21 @@ if [ ! -s /etc/machine-id ]; then
     head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n' > /etc/machine-id 2>/dev/null || true
 fi
 
-mkdir -p "${STEAMCMD_DIR}" "${SERVER_DIR}" "${PROTON_DIR}" "${SERVER_DIR}/home"
+mkdir -p "${SERVER_DIR}" "${SERVER_DIR}/home" ${STEAMCMD_DIR:+"${STEAMCMD_DIR}"} ${PROTON_DIR:+"${PROTON_DIR}"}
 
 # A recursive chown over 60+ GB of ARK files on every boot is painful, so only do
 # the deep pass when the top-level owner actually looks wrong. Set
 # FORCE_CHOWN=true to run it unconditionally if permissions ever get tangled.
-for DIR in "${STEAMCMD_DIR}" "${SERVER_DIR}" "${PROTON_DIR}" "${SERVER_DIR}/home"; do
+# ${VAR:+"${VAR}"} expands to nothing when the variable is unset, which is safe
+# under `set -u`, and stays quoted when it is set, so a path with spaces is not
+# split. Terraria sets neither STEAMCMD_DIR nor PROTON_DIR.
+#
+# All four entries stay listed on purpose. Each gets its own `stat -c %u` drift
+# check below; folding the nested two into SERVER_DIR would mean a root-owned
+# ${SERVER_DIR}/home is only repaired when SERVER_DIR's top level also looks
+# wrong. That is the depotcache bug from aa28fe5 coming back after a tar or
+# docker cp restore.
+for DIR in "${SERVER_DIR}" "${SERVER_DIR}/home" ${STEAMCMD_DIR:+"${STEAMCMD_DIR}"} ${PROTON_DIR:+"${PROTON_DIR}"}; do
     if [ "$(stat -c %u "${DIR}")" != "${TARGET_UID}" ] || [ "${FORCE_CHOWN:-false}" = "true" ]; then
         echo "---Fixing ownership on ${DIR} (slow the first time, this is normal)---"
         chown -R "${TARGET_UID}:${TARGET_GID}" "${DIR}"

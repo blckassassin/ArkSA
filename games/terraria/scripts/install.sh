@@ -10,6 +10,23 @@ install_terraria() {
     local want="${SERVER_DIR}/${TERRARIA_VERSION}"
     local active="${SERVER_DIR}/active"
     local bin="${want}/TerrariaServer.bin.x86_64"
+    local partial="${want}.partial"
+
+    # TERRARIA_VERSION drives ${want}, and a successful install rm -rf's
+    # ${want}. An empty or garbage value (e.g. a blanked Unraid template
+    # field) must never resolve to ${SERVER_DIR} itself.
+    if ! [[ "${TERRARIA_VERSION}" =~ ^[0-9]+$ ]]; then
+        echo "---TERRARIA_VERSION '${TERRARIA_VERSION}' is not a valid version number, refusing to install---"
+        return 1
+    fi
+    if [ "${want}" = "${SERVER_DIR}" ] || [ "${want}" = "${SERVER_DIR}/" ]; then
+        echo "---Refusing to install: computed path '${want}' is the server directory itself---"
+        return 1
+    fi
+
+    # A leftover .partial from a run killed mid-move must not confuse the
+    # next attempt.
+    rm -rf "${partial}"
 
     # The symlink target is the installed-version marker. No separate .version
     # file, and a half-finished install can never look complete because the
@@ -51,11 +68,29 @@ install_terraria() {
         return 1
     fi
 
-    rm -rf "${want}"
-    mv "${staging}/${TERRARIA_VERSION}/Linux" "${want}"
+    # Move onto the volume as a sibling first, not over the live install. /tmp
+    # (staging) and ${SERVER_DIR} (a VOLUME) are very likely different
+    # filesystems, so this is a copy+unlink rather than an atomic rename — a
+    # failure partway must never have already destroyed the previous good
+    # install.
+    if ! mv "${staging}/${TERRARIA_VERSION}/Linux" "${partial}"; then
+        echo "---Move to ${partial} failed, existing install left untouched---"
+        rm -rf "${staging}" "${zip}" "${partial}"
+        return 1
+    fi
     rm -rf "${staging}" "${zip}"
 
-    chmod +x "${bin}"
+    chmod +x "${partial}/TerrariaServer.bin.x86_64"
+    if [ ! -x "${partial}/TerrariaServer.bin.x86_64" ]; then
+        echo "---${partial} has no executable server binary, refusing to activate it---"
+        rm -rf "${partial}"
+        return 1
+    fi
+
+    # Same filesystem now, so this rename is atomic.
+    rm -rf "${want}"
+    mv "${partial}" "${want}"
     ln -sfn "${want}" "${active}"
     echo "---Terraria ${TERRARIA_VERSION} installed---"
+    return 0
 }

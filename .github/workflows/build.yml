@@ -24,10 +24,13 @@ jobs:
         id: pick
         run: |
           set -euo pipefail
-          # The one list to edit when adding a game. Keep slug and title paired.
+          # The one list to edit when adding a game. Keep slug, title, description
+          # and tagline paired. description feeds the OCI image label (without it,
+          # metadata-action derives an empty one from this repo's blank GitHub
+          # description); tagline feeds the Docker Hub short description.
           ALL='[
-            {"slug":"ark-survival-ascended","title":"ARK: Survival Ascended Dedicated Server"},
-            {"slug":"terraria","title":"Terraria Dedicated Server"}
+            {"slug":"ark-survival-ascended","title":"ARK: Survival Ascended Dedicated Server","description":"ASA dedicated server (Windows binary via GE-Proton), SteamCMD-based, Unraid friendly. Inspired by ich777/steamcmd.","tagline":"ARK: Survival Ascended dedicated server for Unraid — SteamCMD + GE-Proton"},
+            {"slug":"terraria","title":"Terraria Dedicated Server","description":"Terraria dedicated server, native Linux binary, checksummed install, Unraid friendly.","tagline":"Terraria dedicated server for Unraid — native Linux, no Proton"}
           ]'
 
           if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
@@ -89,6 +92,7 @@ jobs:
             type=ref,event=pr
           labels: |
             org.opencontainers.image.title=${{ matrix.game.title }}
+            org.opencontainers.image.description=${{ matrix.game.description }}
             org.opencontainers.image.source=https://github.com/blckassassin/unraid-game-servers
 
       # Every guard below is refs/tags/ and not refs/tags/v. A prefixed tag does
@@ -136,4 +140,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ferment9348/${{ matrix.game.slug }}
+          short-description: ${{ matrix.game.tagline }}
           readme-filepath: ./games/${{ matrix.game.slug }}/docs/dockerhub.md

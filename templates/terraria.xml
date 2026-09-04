@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Terraria</Name>
+  <Repository>ferment9348/terraria:latest</Repository>
+  <Registry>https://hub.docker.com/r/ferment9348/terraria/</Registry>
+  <Network>bridge</Network>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/blckassassin/ArkSA/issues</Support>
+  <Project>https://github.com/blckassassin/ArkSA</Project>
+  <Overview>
+Terraria dedicated server.
+
+Terraria ships a native Linux server, so there is no Proton and no SteamCMD here - the server is a small download from terraria.org, checksummed before it is unpacked. First boot installs about 45MB and generates a world in seconds.
+
+Settings are applied on every start, so changing Max Players or the password here and restarting takes effect. The exception is World Name: pointing it at a name that does not exist yet generates a new world rather than renaming the old one, and the container will list the worlds it found in the log.
+
+Only 7777/tcp needs forwarding. Note that this is TCP, while an ARK server's 7777 is UDP, so the two can coexist on the same port number.
+
+The server saves its world when the container stops. Leave Unraid's stop timeout at the default; the shutdown is designed to finish well inside it.
+  </Overview>
+  <Category>GameServers:</Category>
+  <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/templates/terraria.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/terraria.png</Icon>
+  <ReadMe>https://raw.githubusercontent.com/blckassassin/ArkSA/main/games/terraria/README.md</ReadMe>
+  <License>MIT</License>
+  <ExtraSearchTerms>terraria dedicated server sandbox</ExtraSearchTerms>
+  <Changes>Initial release.</Changes>
+  <ExtraParams>--restart=unless-stopped</ExtraParams>
+  <Requires>About 100MB of disk and very little RAM - 1GB is comfortable for a small server. Unlike ARK this is not I/O heavy, so the array is fine.</Requires>
+
+  <Config Name="Game Port" Target="7777" Default="7777" Mode="tcp" Description="Game traffic. TCP, unlike ARK's UDP 7777. This is the one to forward." Type="Port" Display="always" Required="true" Mask="false">7777</Config>
+
+  <Config Name="Server Files" Target="/serverdata/serverfiles" Default="/mnt/user/appdata/terraria" Mode="rw" Description="Where the server, worlds and config live. About 100MB - the array is fine, no SSD needed." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/terraria</Config>
+
+  <Config Name="World Name" Target="WORLD_NAME" Default="World" Mode="" Description="Name of the world file. Changing this after first boot generates a NEW world - the old one stays on disk and the log lists it. It does not rename anything." Type="Variable" Display="always" Required="true" Mask="false">World</Config>
+  <Config Name="World Size" Target="WORLD_SIZE" Default="2" Mode="" Description="1 = small, 2 = medium, 3 = large. Only used when the world is first generated." Type="Variable" Display="always" Required="true" Mask="false">2</Config>
+  <Config Name="Difficulty" Target="DIFFICULTY" Default="0" Mode="" Description="0 = classic, 1 = expert, 2 = master, 3 = journey. Only used when the world is first generated." Type="Variable" Display="always" Required="true" Mask="false">0</Config>
+  <Config Name="World Seed" Target="WORLD_SEED" Default="" Mode="" Description="Optional seed for world generation. Leave blank for random. Only used when the world is first generated." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Max Players" Target="MAX_PLAYERS" Default="8" Mode="" Description="Player slots. Applied on every restart." Type="Variable" Display="always" Required="true" Mask="false">8</Config>
+  <Config Name="Server Password" Target="SRV_PWD" Default="" Mode="" Description="Join password. Leave blank for an open server. Applied on every restart." Type="Variable" Display="always" Required="false" Mask="true"/>
+  <Config Name="MOTD" Target="MOTD" Default="" Mode="" Description="Message shown to players as they join." Type="Variable" Display="always" Required="false" Mask="false"/>
+
+  <Config Name="Terraria Version" Target="TERRARIA_VERSION" Default="1458" Mode="" Description="Server build to install, as it appears in terraria.org's download URL. If you change this you MUST change the checksum below to match, or the container will refuse to start." Type="Variable" Display="advanced" Required="false" Mask="false">1458</Config>
+  <Config Name="Terraria Checksum" Target="TERRARIA_SHA256" Default="f513a4ac9789d34af766291ae217c9cd7d9472e13782a0e2b17512f70d7a8334" Mode="" Description="sha256 of the server zip. Verified before anything is unpacked. Must match the version above." Type="Variable" Display="advanced" Required="false" Mask="false">f513a4ac9789d34af766291ae217c9cd7d9472e13782a0e2b17512f70d7a8334</Config>
+  <Config Name="Stop Timeout" Target="STOP_TIMEOUT" Default="6" Mode="" Description="Seconds to wait for a save-and-exit before force killing. Kept low on purpose: this plus a bounded 3s wait for the log reader must stay under Docker's 10s default stop grace (6+3=9s, 1s to spare). Raise this and you must raise the container's own stop timeout to match, or Docker's outer kill fires before the save finishes." Type="Variable" Display="advanced" Required="false" Mask="false">6</Config>
+
+  <Config Name="UID" Target="UID" Default="99" Mode="" Description="User ID. 99 is the Unraid default." Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
+  <Config Name="GID" Target="GID" Default="100" Mode="" Description="Group ID. 100 is the Unraid default." Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
+  <Config Name="UMASK" Target="UMASK" Default="000" Mode="" Description="umask for files the server creates. 000 keeps them editable over the share." Type="Variable" Display="advanced" Required="false" Mask="false">000</Config>
+</Container>

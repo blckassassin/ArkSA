@@ -35,6 +35,7 @@ WORLD_FILE="${WORLD_DIR}/${WORLD_NAME}.wld"
 FIFO="/tmp/terraria-console.fifo"
 
 SERVER_PID=""
+READER_PID=""
 SHUTTING_DOWN="false"
 
 # -----------------------------------------------------------------------------
@@ -136,20 +137,34 @@ collapse_worldgen_progress() {
             next
         }
         # "Resetting game objects 45%", "Settling liquids 17%": a standalone
-        # counter with no overall figure to peg to. One line per counter is
-        # enough to show it ran; the brief calls this out by name for
-        # "Resetting game objects" but the same shape shows up elsewhere.
+        # counter with no overall figure to peg to. Collapse CONSECUTIVE
+        # repeats only, in a key of its own: "Saving world data: NN%" has
+        # this exact shape and recurs on every console.sh save, and a save
+        # is not worldgen - it happens more than once per container life.
+        # Only a plain passthrough line (below) resets last_repeat, not a
+        # worldgen line above - the boot-time save interleaves one "100.0%
+        # - Finalizing world" line between every percent tick, and treating
+        # that as a boundary would undo the collapsing for the exact save
+        # this branch exists to shrink. A later save is always preceded by
+        # its own passthrough boundary (chat, "Backing up world file",
+        # "Saving before exit..."), so that is the right place to reset.
         if (line ~ /^.+ [0-9]+%$/) {
             name = line
             sub(/ [0-9]+%$/, "", name)
-            if (name != last_name) {
+            # The console echoes a ": " prompt before the first response line
+            # after any command, so line 1 of an event reads ": Saving world
+            # data: 3%" and line 2 reads plain "Saving world data: 11%" -
+            # strip it or those two never compare equal and every event
+            # prints twice.
+            sub(/^: /, "", name)
+            if (name != last_repeat) {
                 print line
                 fflush()
-                last_name = name
-                last_bucket = -1
+                last_repeat = name
             }
             next
         }
+        last_repeat = ""
         print line
         fflush()
     }
@@ -159,6 +174,25 @@ collapse_worldgen_progress() {
 # -----------------------------------------------------------------------------
 # Shutdown
 # -----------------------------------------------------------------------------
+# tini is PID 1 with this script as its only child (start.sh execs into it via
+# gosu), so tini exits - and the kernel tears down the whole PID namespace -
+# the instant the server dies, with no grace period for anything else still
+# running. The reader below only notices the server is gone on its own
+# once-per-second poll, then still has to stat, tail and push through awk;
+# without waiting for it here, "Saving before exit" and the save-progress
+# lines can be SIGKILLed before they ever reach the container's stdout, even
+# though the world save on disk (which does not depend on this) is fine.
+# Bounded, not a bare wait: the same reasoning as the ban on a bare wait on
+# SERVER_PID applies here too - if the reader ever hangs, unbounded means the
+# container hangs until SIGKILL instead of exiting cleanly.
+wait_for_reader() {
+    local waited=0
+    while kill -0 "${READER_PID}" 2>/dev/null && [ "${waited}" -lt 3 ]; do
+        sleep 1
+        waited=$((waited + 1))
+    done
+}
+
 graceful_shutdown() {
     [ "${SHUTTING_DOWN}" = "true" ] && return
     SHUTTING_DOWN="true"
@@ -183,6 +217,7 @@ graceful_shutdown() {
     # A trapped signal makes the first wait return 128+signum without reaping
     # the child, so this second wait is what collects the real status.
     wait "${SERVER_PID}" 2>/dev/null || true
+    wait_for_reader
 
     echo "---Server stopped---"
     exit 0
@@ -246,5 +281,7 @@ SERVER_PID=$!
     sz=$(stat -c %s "${SERVER_LOG}" 2>/dev/null || echo 0)
     [ "${sz}" -gt "${pos}" ] && tail -c "+$((pos + 1))" "${SERVER_LOG}"
 ) | collapse_worldgen_progress &
+READER_PID=$!
 
 wait "${SERVER_PID}"
+wait_for_reader

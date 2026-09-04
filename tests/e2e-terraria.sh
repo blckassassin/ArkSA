@@ -80,7 +80,15 @@ next_report=$((SECONDS + 60))
 until "${ENGINE}" logs "${NAME}" 2>&1 | grep -q 'Server started'; do
     if [ "${SECONDS}" -gt "${deadline}" ]; then
         echo "FAIL: server never reported 'Server started' within ${boot_deadline}s"
+        # Distinguish "the server never started" from "it started and the
+        # container log lost it". The runner writes the server's raw stdout to
+        # a file in the container and mirrors a collapsed view of that file into
+        # the container log. If the raw file holds the line and the log does
+        # not, the fault is the log path, not the game.
+        echo "--- container log: $("${ENGINE}" logs "${NAME}" 2>&1 | wc -l) lines, last 40 ---"
         "${ENGINE}" logs "${NAME}" 2>&1 | tail -40
+        echo "--- raw in-container log ---"
+        "${ENGINE}" exec "${NAME}" sh -c "wc -l < /tmp/terraria-server.log; stat -c %s /tmp/terraria-server.log; grep -c started /tmp/terraria-server.log; tail -5 /tmp/terraria-server.log" 2>&1 || echo "(exec failed)"
         exit 1
     fi
     if ! "${ENGINE}" ps -q --filter "name=${NAME}" | grep -q .; then

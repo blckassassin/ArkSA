@@ -1,15 +1,29 @@
 #!/bin/bash
 # End-to-end check for the Terraria container.
 #
-# Deliberate choices, each one a bug this would otherwise miss:
+# What this catches: a boot hang, the interactive-setup fallback, a shutdown
+# command that never reaches the server, a shutdown command that is the wrong
+# command, a world that was not saved during shutdown, and a stop that
+# overruns the engine's default grace. It cannot distinguish `>&3` from a
+# path reopen in the trap, because the runner holds the FIFO open read-write
+# for the container's lifetime, so both deliver identically (see
+# start-server.sh's `graceful_shutdown`) - that is a real limit of what a
+# live-server stop can exercise, not an oversight here.
+#
+# Deliberate choices:
 #
 #  - The ENGINE's DEFAULT stop grace, not a raised one. STOP_TIMEOUT must fit
 #    inside it or the handler is theatre in production while passing here.
+#    Note: STOP_TIMEOUT's own kill-9 fallback means a delivery failure still
+#    exits within budget (~7-9s) - the elapsed check only catches a stop that
+#    genuinely overruns the grace, not a command that never arrived. That's
+#    what the log/world checks below are for.
 #  - The SIGTERM path (stop), not console.sh. Writing to the FIFO directly
 #    tests the wrong thing; the path that breaks in production is the trap.
-#  - Asserts on the world file's size and mtime, NOT on exit code. The
-#    handler ends in `exit 0` unconditionally, so "exited zero" passes
-#    whether or not the save happened.
+#  - Asserts on the world file's size and STRICTLY advancing mtime, and on
+#    Terraria's own "Saving before exit" log line - NOT on exit code. The
+#    handler ends in `exit 0` unconditionally, and `-ge`/`-gt 0` alone both
+#    pass on a completely untouched file, so neither proves a save happened.
 #
 # ENGINE defaults to docker (CI, real Docker, no user-namespace remapping).
 # This host has no docker, only podman - verify locally with:
@@ -102,9 +116,19 @@ fi
     exit 1
 }
 
+# Terraria's own pre-exit save message - only printed if it actually received
+# and processed "exit", not just any command. Catches a wrong command (e.g.
+# "save") slipping through undetected by the size/mtime checks below, since a
+# real save can happen without the server ever announcing an exit.
+"${ENGINE}" logs "${NAME}" 2>&1 | grep -q 'Saving before exit' || {
+    echo "FAIL: server never announced 'Saving before exit'; exit was not delivered"
+    "${ENGINE}" logs "${NAME}" 2>&1 | tail -20
+    exit 1
+}
+
 after_size=$(stat -c %s "${WORLD}")
 after_mtime=$(stat -c %Y "${WORLD}")
 [ "${after_size}" -gt 0 ] || { echo "FAIL: world is empty after shutdown"; exit 1; }
-[ "${after_mtime}" -ge "${before_mtime}" ] || { echo "FAIL: world mtime went backwards"; exit 1; }
+[ "${after_mtime}" -gt "${before_mtime}" ] || { echo "FAIL: world mtime did not advance on shutdown"; exit 1; }
 
 echo "PASS: world ${after_size} bytes, saved on shutdown, stopped in ${elapsed}s"

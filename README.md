@@ -1,5 +1,8 @@
 # ARK: Survival Ascended — Docker server for Unraid
 
+> **Other servers in this repo:** [Terraria](games/terraria/README.md).
+> This page documents the ARK: Survival Ascended container.
+
 [![build](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml/badge.svg)](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml)
 [![docker](https://img.shields.io/docker/v/ferment9348/ark-survival-ascended?sort=semver&label=docker%20hub)](https://hub.docker.com/r/ferment9348/ark-survival-ascended)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)

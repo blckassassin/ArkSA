@@ -77,6 +77,8 @@ world itself from then on.
 | `MAX_PLAYERS`      | `8`      | Player slots. Applied on every restart.                             |
 | `SRV_PWD`          | empty    | Join password. Blank for an open server.                            |
 | `MOTD`             | empty    | Shown to players as they join.                                      |
+| `SECURE`           | `1`      | Terraria's built-in anti-cheat validation. `1` on, `0` off.          |
+| `UPNP`             | `0`      | Ask the router to auto-forward the game port via UPnP. `1` on, `0` off (default) — manual forwarding is more reliable. |
 | `TERRARIA_VERSION` | `1458`   | See [The version pin](#the-version-pin).                             |
 | `TERRARIA_SHA256`  | pinned   | See [The version pin](#the-version-pin).                             |
 | `STOP_TIMEOUT`     | `6`      | Seconds to wait for a save-and-exit before force killing.            |

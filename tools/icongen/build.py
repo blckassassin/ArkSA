@@ -185,12 +185,12 @@ def write_png(grid, path, size=PNG_SIZE):
     return path
 
 
-def write_svg(grid, path):
+def write_svg(grid, path, label="Hex-cut island with a red obelisk"):
     """One <rect> per horizontal run of identical pixels."""
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {S} {S}" '
         f'width="{PNG_SIZE}" height="{PNG_SIZE}" shape-rendering="crispEdges" '
-        f'role="img" aria-label="Hex-cut island with a red obelisk">'
+        f'role="img" aria-label="{label}">'
     ]
     for y in range(S):
         x = 0

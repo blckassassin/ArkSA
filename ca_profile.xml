@@ -2,9 +2,10 @@
   <Profile>
 Dedicated game server containers for Unraid.
 
-Currently maintained here: **ARK: Survival Ascended**, a SteamCMD-based
-dedicated server. ASA ships no native Linux server binary, so the container
-installs the Windows depot and runs it under GE-Proton.
+Two servers are maintained here: **ARK: Survival Ascended**, a SteamCMD-based
+dedicated server that ships no native Linux binary and runs the Windows depot
+under GE-Proton; and **Terraria**, a native Linux dedicated server with no
+SteamCMD or Proton involved at all.
 
 The layout follows ich777's game server containers — the same
 `/serverdata/steamcmd` and `/serverdata/serverfiles` split, the same

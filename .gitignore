@@ -12,3 +12,6 @@ __pycache__/
 # icongen preview sheet is a build artifact
 tools/icongen/preview.png
 tools/icongen/__pycache__/
+
+# subagent-driven-development scratch workspace
+.superpowers/

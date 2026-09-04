@@ -1,0 +1,21 @@
+services:
+  terraria:
+    build:
+      context: ../..
+      dockerfile: games/terraria/Dockerfile
+    image: ferment9348/terraria:latest
+    container_name: terraria
+    restart: unless-stopped
+    ports:
+      - "7777:7777/tcp"
+    environment:
+      WORLD_NAME: "World"
+      WORLD_SIZE: "2"
+      DIFFICULTY: "0"
+      MAX_PLAYERS: "8"
+      SRV_PWD: ""
+      # 1000:1000 suits an ordinary Linux host. The Unraid template uses 99:100.
+      UID: "1000"
+      GID: "1000"
+    volumes:
+      - ./data/terraria:/serverdata/serverfiles

@@ -3,77 +3,155 @@ name: build
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    # Releases are <slug>/v<version>, e.g. ark-survival-ascended/v1.5.0.
+    # A bare v1.5.0 still starts this workflow (glob filters don't cross '/',
+    # so '*/v*' alone would let it through silently) — it runs and the setup
+    # job below hard-fails it with a message naming the correct format.
+    tags: ['*/v*', 'v*']
   pull_request:
     branches: [main]
 
-env:
-  IMAGE: ferment9348/ark-survival-ascended
-
 jobs:
-  build:
+  # Decides which games this run builds, and whether it publishes. A tag builds
+  # exactly the game its prefix names; main and PRs build everything and publish
+  # nothing.
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      games: ${{ steps.pick.outputs.games }}
     steps:
       - uses: actions/checkout@v7
 
-      # shellcheck and python3 are both preinstalled on ubuntu-latest; installing
-      # shellcheck from apt just added a slow, flaky step.
+      - name: Pick the games to build
+        id: pick
+        run: |
+          set -euo pipefail
+          # The one list to edit when adding a game. Keep slug, title, description
+          # and tagline paired. description feeds the OCI image label (without it,
+          # metadata-action derives an empty one from this repo's blank GitHub
+          # description); tagline feeds the Docker Hub short description.
+          ALL='[
+            {"slug":"ark-survival-ascended","title":"ARK: Survival Ascended Dedicated Server","description":"ASA dedicated server (Windows binary via GE-Proton), SteamCMD-based, Unraid friendly. Inspired by ich777/steamcmd.","tagline":"ARK: Survival Ascended dedicated server for Unraid — SteamCMD + GE-Proton"},
+            {"slug":"terraria","title":"Terraria Dedicated Server","description":"Terraria dedicated server, native Linux binary, checksummed install, Unraid friendly.","tagline":"Terraria dedicated server for Unraid — native Linux, no Proton"}
+          ]'
+
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            echo "games=$(echo "$ALL" | jq -c .)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          SLUG="${GITHUB_REF_NAME%%/*}"
+          # Without this, a typo'd slug is a green run that publishes nothing:
+          # the tag glob still matches, and metadata-action treats a failed
+          # `match` as "no tags" rather than an error.
+          if ! echo "$ALL" | jq -e --arg s "$SLUG" 'any(.[]; .slug == $s)' >/dev/null; then
+            echo "::error::'${SLUG}' is not a known game slug."
+            echo "::error::Valid slugs: $(echo "$ALL" | jq -r '[.[].slug] | join(", ")')"
+            echo "::error::Release tags look like <slug>/v1.2.3 — a bare v1.2.3 publishes nothing."
+            exit 1
+          fi
+          echo "games=$(echo "$ALL" | jq -c --arg s "$SLUG" '[.[] | select(.slug == $s)]')" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        game: ${{ fromJSON(needs.setup.outputs.games) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # shellcheck and python3 are both preinstalled on ubuntu-latest.
       - name: Lint the scripts
         run: |
-          shellcheck --severity=warning scripts/*.sh
-          python3 -m py_compile scripts/rcon.py
+          shellcheck --severity=warning shared/scripts/*.sh games/*/scripts/*.sh tests/*.sh
+          for f in games/*/scripts/*.py; do [ -e "$f" ] && python3 -m py_compile "$f"; done
+          bash tests/unit.sh
 
       - uses: docker/setup-buildx-action@v4
 
-      # amd64 only: SteamCMD pulls a Windows x86_64 depot that runs under Proton,
-      # so an arm64 image would build and then be unable to run the server.
+      # amd64 only: ASA runs a Windows depot under Proton, and the Terraria
+      # server ships an x86_64 binary. An arm64 image would build and not run.
       - name: Tags and labels
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.IMAGE }}
+          # Exactly one repo. generateTags applies the resolved version to every
+          # entry here, so listing both would publish one game into the other's
+          # Docker Hub repo.
+          images: ferment9348/${{ matrix.game.slug }}
+          # type=semver with match=, NOT type=match. procMatch hardcodes
+          # latest=true, so it would move :latest for a release candidate.
+          # procSemver applies match= before the prerelease check, so the narrow
+          # :latest gating survives. The pattern is anchored on the slug and
+          # requires a digit after v — unanchored v(.+) matches the v in
+          # "survival" and captures garbage.
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=semver,pattern={{version}},match=^${{ matrix.game.slug }}/v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$
+            type=semver,pattern={{major}}.{{minor}},match=^${{ matrix.game.slug }}/v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$
             type=ref,event=branch
             type=ref,event=pr
-          # Without these, metadata-action derives title/description from the
-          # repo and overwrites the Dockerfile's, leaving the description empty.
           labels: |
-            org.opencontainers.image.title=ARK: Survival Ascended Dedicated Server
-            org.opencontainers.image.description=ASA dedicated server (Windows binary via GE-Proton), SteamCMD-based, Unraid friendly. Inspired by ich777/steamcmd.
+            org.opencontainers.image.title=${{ matrix.game.title }}
+            org.opencontainers.image.description=${{ matrix.game.description }}
+            org.opencontainers.image.source=https://github.com/blckassassin/ArkSA
 
-      # Only tags publish. Pushes to main and pull requests build and stop, so
-      # :latest is always a release that was cut deliberately.
+      # Every guard below is refs/tags/ and not refs/tags/v. A prefixed tag does
+      # not start with refs/tags/v, and missing even one of these produces a
+      # green run that publishes nothing, or publishes without moving :latest.
       - name: Log in to Docker Hub
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Fail if a tag build produced no version tags
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          TAGS='${{ steps.meta.outputs.tags }}'
+          echo "$TAGS"
+          echo "$TAGS" | grep -q ':latest$' || {
+            echo "::error::No :latest tag was computed. The CA template pins :latest,"
+            echo "::error::so publishing without it strands every installed user."
+            exit 1
+          }
+
+      # Only Terraria: the install is 46MB and a world generates in seconds. A
+      # full ASA boot pulls ~13GB, so ASA stays a manual check. This must run
+      # BEFORE Build: it builds its own throwaway image and gates the push
+      # that follows, so a regression fails before anything reaches Docker
+      # Hub instead of after.
+      - name: End-to-end test
+        if: matrix.game.slug == 'terraria'
+        run: |
+          docker build -f games/terraria/Dockerfile -t terraria-test .
+          bash tests/e2e-terraria.sh terraria-test
+
       - name: Build
         uses: docker/build-push-action@v7
         with:
           context: .
+          file: games/${{ matrix.game.slug }}/Dockerfile
           platforms: linux/amd64
-          push: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Cosmetic only, and it runs after the image is published so it can never
-      # block a release. Needs a Docker Hub token with read/write/delete scope;
-      # a push-only token gets Forbidden here and the step is skipped over.
+      # Cosmetic, and it runs after the push so it can never block a release.
+      # continue-on-error means a wrong readme-filepath fails silently, so the
+      # path is derived from the slug rather than hardcoded.
       - name: Sync the Docker Hub description
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         continue-on-error: true
         uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ env.IMAGE }}
-          short-description: "ARK: Survival Ascended dedicated server for Unraid — SteamCMD + GE-Proton"
-          readme-filepath: ./docs/dockerhub.md
+          repository: ferment9348/${{ matrix.game.slug }}
+          short-description: ${{ matrix.game.tagline }}
+          readme-filepath: ./games/${{ matrix.game.slug }}/docs/dockerhub.md

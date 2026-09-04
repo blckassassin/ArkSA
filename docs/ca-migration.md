@@ -61,6 +61,9 @@ break them with no redirect to save it.
 5. **Only now**, in a separate follow-up commit, rewrite `<TemplateURL>`,
    `<Support>` and `<Project>` in both files under `templates/`, and `<Icon>`
    / `<WebPage>` in `ca_profile.xml`, to point at the new repository name.
+   Also rewrite the `org.opencontainers.image.source` label in
+   `.github/workflows/build.yml` and `games/terraria/Dockerfile` — both
+   still say `blckassassin/ArkSA`.
 
 > [!WARNING]
 > **Never create a new repository named `blckassassin/ArkSA`, at any point

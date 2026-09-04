@@ -4,7 +4,7 @@ FROM debian:trixie-slim
 
 LABEL org.opencontainers.image.title="Terraria Dedicated Server" \
       org.opencontainers.image.description="Terraria dedicated server, native Linux binary, Unraid friendly." \
-      org.opencontainers.image.source="https://github.com/blckassassin/unraid-game-servers" \
+      org.opencontainers.image.source="https://github.com/blckassassin/ArkSA" \
       org.opencontainers.image.licenses="MIT"
 
 # STEAMCMD_DIR and PROTON_DIR are deliberately not set. shared/scripts/start.sh
@@ -28,7 +28,6 @@ ENV DEBIAN_FRONTEND="noninteractive" \
     UID="99" \
     GID="100" \
     DATA_PERM="775" \
-    FIX_PERMS="true" \
     UMASK="000" \
     # 6 + a bounded 3s reader wait = 9s, under Docker's 10s default stop
     # grace. See start-server.sh's wait_for_reader() before raising this.

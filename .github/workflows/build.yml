@@ -129,6 +129,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Only Terraria: the install is 46MB and a world generates in seconds. A
+      # full ASA boot pulls ~13GB, so ASA stays a manual check.
+      - name: End-to-end test
+        if: matrix.game.slug == 'terraria'
+        run: |
+          docker build -f games/terraria/Dockerfile -t terraria-test .
+          bash tests/e2e-terraria.sh terraria-test
+
       # Cosmetic, and it runs after the push so it can never block a release.
       # continue-on-error means a wrong readme-filepath fails silently, so the
       # path is derived from the slug rather than hardcoded.

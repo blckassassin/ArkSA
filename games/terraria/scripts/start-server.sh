@@ -120,7 +120,17 @@ collapse_worldgen_progress() {
         cat
         return
     fi
-    awk '
+    # mawk -W interactive, NOT plain awk. This is load-bearing and was found the
+    # hard way: mawk buffers stdout in blocks, and its fflush() below is a no-op
+    # with no argument -- verified in this image, alongside fflush(""),
+    # system("") and stdbuf -oL, none of which flush it either. Only -W
+    # interactive does. Without it the container log lags a whole buffer and
+    # then strands the tail forever once the server goes quiet: the log froze at
+    # 188 lines on "Disarming broken traps" while the server had long since
+    # written "Server started". mawk is named explicitly so a base-image change
+    # to gawk fails loudly here instead of silently reintroducing the buffering.
+    # The fflush() calls stay for any awk that honours them.
+    mawk -W interactive '
     {
         line = $0
         # "12.3% - Phase name - 45.6%": dedup on the phase and the whole-percent
@@ -265,31 +275,34 @@ echo "---Starting Terraria ${TERRARIA_VERSION} on port ${GAME_PORT}---"
 # is never gated on a reader, so SERVER_PID below is always exactly right
 # and the server's own speed no longer depends on anything downstream.
 SERVER_LOG="/tmp/terraria-server.log"
-"${BIN}" -config "${CONF}" < "${FIFO}" > "${SERVER_LOG}" 2>&1 &
+# Create the file and open the reader on it BEFORE the server starts, then
+# append, so the reader can never miss the opening lines and nothing truncates
+# the file out from under an already-open descriptor.
+: > "${SERVER_LOG}"
+exec 4<"${SERVER_LOG}"
+"${BIN}" -config "${CONF}" < "${FIFO}" >> "${SERVER_LOG}" 2>&1 &
 SERVER_PID=$!
 
-# Mirrors the log file into this script's own stdout through the collapsing
-# filter above, same as the ASA runner's LOG_TAIL_PID does for its engine
-# log. This is a plain byte-offset poll loop, not `tail -f`: inotify-based
-# follow measurably missed a burst of writes in this sandbox (it sat idle
-# while the file kept growing underneath it, right through "Server
-# started", and never caught back up) and this coreutils build has no
-# --poll flag to force plain polling instead. `stat` + `tail -c` depend on
-# nothing but read()/stat(), so there is no notification path left to fail.
-# One persistent awk process reads the whole loop's output, so its dedup
-# state survives across polls. Stops on its own once the server does.
+# Mirror the log file into this script's own stdout through the collapsing
+# filter above, same as the ASA runner's LOG_TAIL_PID does for its engine log.
+#
+# A persistent read descriptor does the position tracking. read() advances fd 4
+# by itself and EOF simply returns non-zero, so there is no byte offset to
+# compute and no window where the file can grow between measuring it and
+# reading it. The previous version stat'd the size and then ran
+# `tail -c +$((pos+1))`, which reads to the CURRENT end of file rather than to
+# the size that was measured -- during a worldgen burst that races, and it
+# ended up stranding the tail of the log: the container log froze at 188 of
+# 190 filtered lines while the server had long since written "Server started".
+# Do not reintroduce offset arithmetic here.
 (
-    pos=0
     while kill -0 "${SERVER_PID}" 2>/dev/null; do
-        sz=$(stat -c %s "${SERVER_LOG}" 2>/dev/null || echo 0)
-        if [ "${sz}" -gt "${pos}" ]; then
-            tail -c "+$((pos + 1))" "${SERVER_LOG}"
-            pos="${sz}"
-        fi
+        while IFS= read -r log_line <&4; do printf '%s\n' "${log_line}"; done
         sleep 1
     done
-    sz=$(stat -c %s "${SERVER_LOG}" 2>/dev/null || echo 0)
-    [ "${sz}" -gt "${pos}" ] && tail -c "+$((pos + 1))" "${SERVER_LOG}"
+    # The server has exited, so everything it wrote is already on disk. Drain
+    # whatever is left so the shutdown save is not lost at teardown.
+    while IFS= read -r log_line <&4; do printf '%s\n' "${log_line}"; done
 ) | collapse_worldgen_progress &
 READER_PID=$!
 

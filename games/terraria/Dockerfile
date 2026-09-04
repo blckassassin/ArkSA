@@ -39,6 +39,7 @@ RUN apt-get update && \
         ca-certificates \
         curl \
         unzip \
+        mawk \
         procps \
         gosu \
         tini \

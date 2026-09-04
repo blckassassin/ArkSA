@@ -37,6 +37,24 @@ docker run -d --name ark-sa \
 | 27015 | UDP   | Legacy Steam query port. Vestigial — ASA discovery is EOS. |
 | 27020 | TCP   | RCON. Forward only to administer from outside the LAN.     |
 
+To run the game on a different port, change it in three places to the same
+number — both sides of `-p` and `GAME_PORT`:
+
+```bash
+-p 7779:7779/udp -e GAME_PORT=7779
+```
+
+Docker gives the container no way to discover which host port it was published
+on, so the server can only report the number it binds; keeping the three equal
+is what makes the startup log name the port players type. `-p 7779:7777` alone
+works but logs 7777, and a `GAME_PORT` that disagrees with the container side of
+`-p` leaves nothing behind the mapping and no error in the log. The peer port is
+game port + 1 derived by the engine, with no variable behind it, so move that
+mapping to match.
+
+The query and RCON ports need none of this — nothing reports them back to you,
+so mapping a different host port to them works on its own.
+
 ## Common settings
 
 | Variable        | Default          | Notes                                              |

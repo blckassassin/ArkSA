@@ -40,6 +40,20 @@ Terraria uses TCP on 7777, not UDP. A UDP service on the same number is a
 different port as far as the network stack is concerned, so the two never
 collide.
 
+To run on a different port, change it in three places to the same number — both
+sides of `-p` and `GAME_PORT`:
+
+```bash
+-p 7779:7779/tcp -e GAME_PORT=7779
+```
+
+Docker gives the container no way to discover which host port it was published
+on, so the server can only report the number it binds; keeping the three equal
+is what makes the startup log and Terraria's own `Listening on port` name the
+port players type. `-p 7779:7777` alone works but logs 7777, and a `GAME_PORT`
+that disagrees with the container side of `-p` leaves nothing behind the mapping
+and no error in the log.
+
 ## Common settings
 
 | Variable           | Default | Notes                                                    |

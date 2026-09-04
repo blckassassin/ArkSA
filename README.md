@@ -118,6 +118,22 @@ protocol, so you do **not** need to forward 27015 for your server to appear in
 the Unofficial list. It is mapped only because some third-party tooling still
 expects it to exist.
 
+To run the game on a different port, change it in three places to the same
+number: the mapping's container port, the mapping's host port, and `GAME_PORT`.
+Docker gives the container no way to discover which host port it was published
+on, so the server can only report the number it binds — keeping the three equal
+is what makes the startup log name the port players actually type. A mismatch is
+quiet rather than loud: a bind port different from the container port leaves
+nothing behind the mapping and no error in the log. The peer port is derived by
+the engine as game port + 1 and has no variable, so move that mapping to match.
+
+The query and RCON ports need none of this. Nothing reports them back to you, so
+mapping a different host port to them works on its own.
+
+Container ports are namespaced, so this server holding 7777 and another game
+container holding 7777 never collide however they are mapped. Only host ports
+have to be unique, and only within a protocol.
+
 ## Configuration
 
 Environment variables of note:
@@ -127,6 +143,7 @@ Environment variables of note:
 | `SERVER_NAME`       | `ASA Server`     | Session name in the server browser.                                        |
 | `MAP`               | `TheIsland_WP`   | Needs the `_WP` suffix — the bare ASE name will not load.                  |
 | `MAX_PLAYERS`       | `20`             | Becomes `-WinLiveMaxPlayers`.                                              |
+| `GAME_PORT`         | `7777`           | Port the server binds and reports in the log. Keep it equal to both sides of the port mapping. |
 | `SRV_PWD`           | empty            | Join password. Blank for an open server.                                   |
 | `SRV_ADMIN_PWD`     | `adminpassword`  | Admin **and** RCON password. Change it.                                    |
 | `MODS`              | empty            | Comma-separated CurseForge project IDs.                                    |

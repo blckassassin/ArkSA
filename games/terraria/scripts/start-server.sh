@@ -100,6 +100,63 @@ write_config() {
 }
 
 # -----------------------------------------------------------------------------
+# Worldgen progress collapsing. Not cosmetic: Terraria logs one line per 0.1%
+# of every generation phase, plus a hundred "Resetting game objects N%"
+# lines — 10,000+ lines for even a small world. A container log driver that
+# cannot keep up with that stalls, and the stall looks exactly like a hung
+# server: the process itself keeps running and finishes generating fine,
+# only the log freezes. An operator watching a frozen log concludes the
+# container hung and kills it mid-generation, destroying the world - the
+# same silent-hang failure class this repo already paid for with GE-Proton.
+#
+# Emit a line only when the phase name changes or the whole-percent tick
+# changes; everything else (bare text, "Server started", errors) passes
+# through untouched. fflush after every print, or mawk's own buffering
+# reintroduces the same silence it's here to fix.
+# -----------------------------------------------------------------------------
+collapse_worldgen_progress() {
+    awk '
+    {
+        line = $0
+        # "12.3% - Phase name - 45.6%": dedup on the phase and the whole-percent
+        # part of the OVERALL figure, so a phase busy at the 0.1% level still
+        # collapses to about one line per percentage point.
+        if (line ~ /^[0-9]+\.[0-9]+% - .+ - [0-9]+\.[0-9]+%$/) {
+            split(line, parts, " - ")
+            phase = parts[2]
+            pct = parts[1]
+            sub(/%$/, "", pct)
+            bucket = int(pct)
+            if (phase != last_name || bucket != last_bucket) {
+                print line
+                fflush()
+                last_name = phase
+                last_bucket = bucket
+            }
+            next
+        }
+        # "Resetting game objects 45%", "Settling liquids 17%": a standalone
+        # counter with no overall figure to peg to. One line per counter is
+        # enough to show it ran; the brief calls this out by name for
+        # "Resetting game objects" but the same shape shows up elsewhere.
+        if (line ~ /^.+ [0-9]+%$/) {
+            name = line
+            sub(/ [0-9]+%$/, "", name)
+            if (name != last_name) {
+                print line
+                fflush()
+                last_name = name
+                last_bucket = -1
+            }
+            next
+        }
+        print line
+        fflush()
+    }
+    '
+}
+
+# -----------------------------------------------------------------------------
 # Shutdown
 # -----------------------------------------------------------------------------
 graceful_shutdown() {
@@ -152,7 +209,42 @@ mkfifo "${FIFO}"
 exec 3<>"${FIFO}"
 
 echo "---Starting Terraria ${TERRARIA_VERSION} on port ${GAME_PORT}---"
-"${BIN}" -config "${CONF}" < "${FIFO}" &
+# A real file, not a pipe. Measured on this host: the same binary, the same
+# seed range, writing to a plain file reached "Server started" in ~26s;
+# piped through this exact filter via process substitution it was still
+# stuck 10+ minutes later at the same 90-something percent mark, CPU still
+# ticking over but barely. A live pipe reader on the other end of stdout -
+# even an idle, fast one - made the server itself over 20x slower, for
+# reasons that sit below this script (scheduling/latency on that pipe, not
+# the reader's own CPU cost, which measured near zero). Writing to a file
+# is never gated on a reader, so SERVER_PID below is always exactly right
+# and the server's own speed no longer depends on anything downstream.
+SERVER_LOG="/tmp/terraria-server.log"
+"${BIN}" -config "${CONF}" < "${FIFO}" > "${SERVER_LOG}" 2>&1 &
 SERVER_PID=$!
+
+# Mirrors the log file into this script's own stdout through the collapsing
+# filter above, same as the ASA runner's LOG_TAIL_PID does for its engine
+# log. This is a plain byte-offset poll loop, not `tail -f`: inotify-based
+# follow measurably missed a burst of writes in this sandbox (it sat idle
+# while the file kept growing underneath it, right through "Server
+# started", and never caught back up) and this coreutils build has no
+# --poll flag to force plain polling instead. `stat` + `tail -c` depend on
+# nothing but read()/stat(), so there is no notification path left to fail.
+# One persistent awk process reads the whole loop's output, so its dedup
+# state survives across polls. Stops on its own once the server does.
+(
+    pos=0
+    while kill -0 "${SERVER_PID}" 2>/dev/null; do
+        sz=$(stat -c %s "${SERVER_LOG}" 2>/dev/null || echo 0)
+        if [ "${sz}" -gt "${pos}" ]; then
+            tail -c "+$((pos + 1))" "${SERVER_LOG}"
+            pos="${sz}"
+        fi
+        sleep 1
+    done
+    sz=$(stat -c %s "${SERVER_LOG}" 2>/dev/null || echo 0)
+    [ "${sz}" -gt "${pos}" ] && tail -c "+$((pos + 1))" "${SERVER_LOG}"
+) | collapse_worldgen_progress &
 
 wait "${SERVER_PID}"

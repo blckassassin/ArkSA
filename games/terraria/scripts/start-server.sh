@@ -185,6 +185,12 @@ collapse_worldgen_progress() {
 # Bounded, not a bare wait: the same reasoning as the ban on a bare wait on
 # SERVER_PID applies here too - if the reader ever hangs, unbounded means the
 # container hangs until SIGKILL instead of exiting cleanly.
+#
+# The 3s cap here plus STOP_TIMEOUT (Dockerfile, default 6) must stay under
+# Docker's 10s default stop grace: 6 + 3 = 9, leaving 1s of headroom. Raise
+# either number and the container's own stop timeout needs raising too, or
+# Docker's outer SIGKILL fires before this wait does and cuts off the exact
+# save-confirmation output it exists to protect.
 wait_for_reader() {
     local waited=0
     while kill -0 "${READER_PID}" 2>/dev/null && [ "${waited}" -lt 3 ]; do

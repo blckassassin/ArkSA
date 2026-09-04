@@ -29,7 +29,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
     DATA_PERM="775" \
     FIX_PERMS="true" \
     UMASK="000" \
-    STOP_TIMEOUT="8"
+    STOP_TIMEOUT="6"
 
 RUN apt-get update && \
     apt-get -y upgrade && \

@@ -43,6 +43,18 @@ docker build -f games/terraria/Dockerfile -t ferment9348/terraria:latest .
 Terraria uses **TCP** on 7777. A UDP service on 7777 is a different port as far
 as the network stack is concerned, so the two never collide.
 
+To run on a different port, change it in three places to the same number: the
+mapping's container port, the mapping's host port, and `GAME_PORT`. Docker gives
+the container no way to discover which host port it was published on, so the
+server can only report the number it binds — keeping the three equal is what
+makes the log line and Terraria's own `Listening on port` match what players
+type. A mismatch is quiet rather than loud: bind port different from the
+container port and nothing reaches the server at all.
+
+The container port is namespaced, so a Terraria on 7777 and an ARK on 7777 never
+collide however they are mapped. Only host ports have to be unique, and only
+within a protocol.
+
 ## The version pin
 
 Terraria has no auto-updater here — `TERRARIA_VERSION` names the exact build
@@ -73,6 +85,7 @@ world itself from then on.
 | `DIFFICULTY`       | `0`      | `0` classic, `1` expert, `2` master, `3` journey. First gen only.    |
 | `WORLD_SEED`       | empty    | Optional. Blank means random. First gen only.                       |
 | `MAX_PLAYERS`      | `8`      | Player slots. Applied on every restart.                             |
+| `GAME_PORT`        | `7777`   | Port the server binds and reports in the log. Keep it equal to both sides of the port mapping. |
 | `SRV_PWD`          | empty    | Join password. Blank for an open server.                            |
 | `MOTD`             | empty    | Shown to players as they join.                                      |
 | `SECURE`           | `1`      | Terraria's built-in anti-cheat validation. `1` on, `0` off.          |

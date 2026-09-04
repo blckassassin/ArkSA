@@ -21,6 +21,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
     GAME_PORT="7777" \
     SRV_PWD="" \
     MOTD="" \
+    VERBOSE_LOG="false" \
     GAME_LANGUAGE="en/US" \
     SECURE="1" \
     UPNP="0" \

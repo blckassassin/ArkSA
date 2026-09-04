@@ -116,6 +116,10 @@ write_config() {
 # reintroduces the same silence it's here to fix.
 # -----------------------------------------------------------------------------
 collapse_worldgen_progress() {
+    if [ "${VERBOSE_LOG:-false}" = "true" ]; then
+        cat
+        return
+    fi
     awk '
     {
         line = $0

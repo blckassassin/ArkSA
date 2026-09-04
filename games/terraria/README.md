@@ -119,8 +119,12 @@ counters: world generation prints one line per 0.1% of every phase, and a
 save prints similarly dense percentage updates. Left alone, that is tens of
 thousands of lines that can outrun the log driver badly enough to look like a
 hung server when it is not. This container collapses each phase's counter
-down to about one line per whole percentage point instead. If you need the
-firehose, the raw log file is still on disk in the container.
+down to about one line per whole percentage point instead. Set `VERBOSE_LOG=true`
+to get the firehose in the container log itself — every line Terraria emits,
+uncollapsed. It cannot slow the server down: the server writes to a plain
+file regardless of this setting, and `VERBOSE_LOG` only changes how much of
+that file gets mirrored into the log downstream. It is noisy, not risky —
+leave it off unless you are diagnosing something.
 
 ## Stopping safely
 

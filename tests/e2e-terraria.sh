@@ -67,10 +67,16 @@ echo "== booting ${IMAGE} (${ENGINE})"
     "${IMAGE}" >/dev/null
 
 echo "== waiting for the server to listen"
-deadline=$((SECONDS + 300))
+# GitHub-hosted runners are 2-core and Terraria's worldgen is single-threaded.
+# A 300s deadline was observed failing on a real CI run at 97% complete, while
+# the same WORLD_SIZE=1 world takes 25-50s on a developer machine. This exists
+# to catch a genuine hang, not to enforce a performance budget.
+boot_deadline=900
+deadline=$((SECONDS + boot_deadline))
+next_report=$((SECONDS + 60))
 until "${ENGINE}" logs "${NAME}" 2>&1 | grep -q 'Server started'; do
     if [ "${SECONDS}" -gt "${deadline}" ]; then
-        echo "FAIL: server never reported 'Server started' within 300s"
+        echo "FAIL: server never reported 'Server started' within ${boot_deadline}s"
         "${ENGINE}" logs "${NAME}" 2>&1 | tail -40
         exit 1
     fi
@@ -78,6 +84,10 @@ until "${ENGINE}" logs "${NAME}" 2>&1 | grep -q 'Server started'; do
         echo "FAIL: container exited during startup"
         "${ENGINE}" logs "${NAME}" 2>&1 | tail -40
         exit 1
+    fi
+    if [ "${SECONDS}" -gt "${next_report}" ]; then
+        echo "== still waiting (${SECONDS}s elapsed)"
+        next_report=$((SECONDS + 60))
     fi
     sleep 2
 done

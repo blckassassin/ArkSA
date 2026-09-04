@@ -145,7 +145,16 @@ jobs:
       # Cosmetic, and it runs after the push so it can never block a release.
       # continue-on-error means a wrong readme-filepath fails silently, so the
       # path is derived from the slug rather than hardcoded.
+      #
+      # It stays non-blocking, but it does NOT stay silent: this failed with
+      # "Forbidden" on two consecutive releases (ark v1.4.0 and terraria
+      # v1.0.0) and nobody noticed, because a swallowed failure looks exactly
+      # like a success from the run list. The guard below turns it into a
+      # warning annotation on the run. The cause both times was DOCKERHUB_TOKEN
+      # carrying "Read & Write" scope; the description endpoint needs
+      # "Read, Write, Delete".
       - name: Sync the Docker Hub description
+        id: dockerhub_description
         if: startsWith(github.ref, 'refs/tags/')
         continue-on-error: true
         uses: peter-evans/dockerhub-description@v5
@@ -155,3 +164,10 @@ jobs:
           repository: ferment9348/${{ matrix.game.slug }}
           short-description: ${{ matrix.game.tagline }}
           readme-filepath: ./games/${{ matrix.game.slug }}/docs/dockerhub.md
+
+      - name: Say so if the description did not sync
+        if: >-
+          startsWith(github.ref, 'refs/tags/') &&
+          steps.dockerhub_description.outcome == 'failure'
+        run: |
+          echo "::warning title=Docker Hub description not updated::The image published fine, but ferment9348/${{ matrix.game.slug }} still shows its previous description. A 'Forbidden' here means DOCKERHUB_TOKEN lacks 'Read, Write, Delete' scope, which the description endpoint requires."

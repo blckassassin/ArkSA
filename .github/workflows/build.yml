@@ -4,8 +4,10 @@ on:
   push:
     branches: [main]
     # Releases are <slug>/v<version>, e.g. ark-survival-ascended/v1.5.0.
-    # A bare v1.5.0 no longer triggers anything; the setup job explains that.
-    tags: ['*/v*']
+    # A bare v1.5.0 still starts this workflow (glob filters don't cross '/',
+    # so '*/v*' alone would let it through silently) — it runs and the setup
+    # job below hard-fails it with a message naming the correct format.
+    tags: ['*/v*', 'v*']
   pull_request:
     branches: [main]
 
@@ -93,7 +95,7 @@ jobs:
           labels: |
             org.opencontainers.image.title=${{ matrix.game.title }}
             org.opencontainers.image.description=${{ matrix.game.description }}
-            org.opencontainers.image.source=https://github.com/blckassassin/unraid-game-servers
+            org.opencontainers.image.source=https://github.com/blckassassin/ArkSA
 
       # Every guard below is refs/tags/ and not refs/tags/v. A prefixed tag does
       # not start with refs/tags/v, and missing even one of these produces a
@@ -117,6 +119,17 @@ jobs:
             exit 1
           }
 
+      # Only Terraria: the install is 46MB and a world generates in seconds. A
+      # full ASA boot pulls ~13GB, so ASA stays a manual check. This must run
+      # BEFORE Build: it builds its own throwaway image and gates the push
+      # that follows, so a regression fails before anything reaches Docker
+      # Hub instead of after.
+      - name: End-to-end test
+        if: matrix.game.slug == 'terraria'
+        run: |
+          docker build -f games/terraria/Dockerfile -t terraria-test .
+          bash tests/e2e-terraria.sh terraria-test
+
       - name: Build
         uses: docker/build-push-action@v7
         with:
@@ -128,14 +141,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # Only Terraria: the install is 46MB and a world generates in seconds. A
-      # full ASA boot pulls ~13GB, so ASA stays a manual check.
-      - name: End-to-end test
-        if: matrix.game.slug == 'terraria'
-        run: |
-          docker build -f games/terraria/Dockerfile -t terraria-test .
-          bash tests/e2e-terraria.sh terraria-test
 
       # Cosmetic, and it runs after the push so it can never block a release.
       # continue-on-error means a wrong readme-filepath fails silently, so the

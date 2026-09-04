@@ -6,8 +6,8 @@
   <Network>bridge</Network>
   <Shell>bash</Shell>
   <Privileged>false</Privileged>
-  <Support>https://github.com/blckassassin/ArkSA/issues</Support>
-  <Project>https://github.com/blckassassin/ArkSA</Project>
+  <Support>https://github.com/blckassassin/unraid-game-servers/issues</Support>
+  <Project>https://github.com/blckassassin/unraid-game-servers</Project>
   <Overview>
 Terraria dedicated server.
 
@@ -20,9 +20,9 @@ Only 7777/tcp needs forwarding. Note that this is TCP, while an ARK server's 777
 The server saves its world when the container stops. Leave Unraid's stop timeout at the default; the shutdown is designed to finish well inside it.
   </Overview>
   <Category>GameServers:</Category>
-  <TemplateURL>https://raw.githubusercontent.com/blckassassin/ArkSA/main/templates/terraria.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/terraria.png</Icon>
-  <ReadMe>https://raw.githubusercontent.com/blckassassin/ArkSA/main/games/terraria/README.md</ReadMe>
+  <TemplateURL>https://raw.githubusercontent.com/blckassassin/unraid-game-servers/main/templates/terraria.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/blckassassin/unraid-game-servers/main/terraria.png</Icon>
+  <ReadMe>https://raw.githubusercontent.com/blckassassin/unraid-game-servers/main/games/terraria/README.md</ReadMe>
   <License>MIT</License>
   <ExtraSearchTerms>terraria dedicated server sandbox</ExtraSearchTerms>
   <Changes>Initial release.</Changes>

@@ -1,6 +1,6 @@
 # Terraria — dedicated server for Unraid
 
-[![build](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml/badge.svg)](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml)
+[![build](https://github.com/blckassassin/unraid-game-servers/actions/workflows/build.yml/badge.svg)](https://github.com/blckassassin/unraid-game-servers/actions/workflows/build.yml)
 [![docker](https://img.shields.io/docker/v/ferment9348/terraria?sort=semver&label=docker%20hub)](https://hub.docker.com/r/ferment9348/terraria)
 [![license](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
 
@@ -19,8 +19,8 @@ Or build it yourself from the repo root — the Dockerfile expects to be built
 with the repo root as context, not this directory:
 
 ```bash
-git clone https://github.com/blckassassin/ArkSA.git
-cd ArkSA
+git clone https://github.com/blckassassin/unraid-game-servers.git
+cd unraid-game-servers
 docker build -f games/terraria/Dockerfile -t ferment9348/terraria:latest .
 ```
 

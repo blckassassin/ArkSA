@@ -13,9 +13,9 @@ The layout follows ich777's game server containers — the same
 downloading the game files on first boot so the image itself stays small.
 
 Support is through GitHub issues:
-https://github.com/blckassassin/ArkSA/issues
+https://github.com/blckassassin/unraid-game-servers/issues
 
 </Profile>
-  <Icon>https://raw.githubusercontent.com/blckassassin/ArkSA/main/icon.svg</Icon>
-  <WebPage>https://github.com/blckassassin/ArkSA</WebPage>
+  <Icon>https://raw.githubusercontent.com/blckassassin/unraid-game-servers/main/icon.svg</Icon>
+  <WebPage>https://github.com/blckassassin/unraid-game-servers</WebPage>
 </CommunityApplications>

@@ -3,7 +3,7 @@
 > **Other servers in this repo:** [Terraria](games/terraria/README.md).
 > This page documents the ARK: Survival Ascended container.
 
-[![build](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml/badge.svg)](https://github.com/blckassassin/ArkSA/actions/workflows/build.yml)
+[![build](https://github.com/blckassassin/unraid-game-servers/actions/workflows/build.yml/badge.svg)](https://github.com/blckassassin/unraid-game-servers/actions/workflows/build.yml)
 [![docker](https://img.shields.io/docker/v/ferment9348/ark-survival-ascended?sort=semver&label=docker%20hub)](https://hub.docker.com/r/ferment9348/ark-survival-ascended)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -88,8 +88,8 @@ at the most recent release rather than at the tip of `main`.
 Or build it yourself — on Unraid you can do this on the server itself:
 
 ```bash
-git clone https://github.com/blckassassin/ArkSA.git
-cd ArkSA
+git clone https://github.com/blckassassin/unraid-game-servers.git
+cd unraid-game-servers
 docker build -t ferment9348/ark-survival-ascended:latest .
 ```
 

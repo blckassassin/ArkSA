@@ -54,7 +54,7 @@ fine on the same host and port number.
 | `STOP_TIMEOUT`      | `6`     | Seconds for a save-and-exit before force kill.               |
 | `UID` / `GID`       | `99` / `100` | Unraid defaults.                                        |
 
-Full list in the [README](https://github.com/blckassassin/ArkSA/blob/main/games/terraria/README.md).
+Full list in the [README](https://github.com/blckassassin/unraid-game-servers/blob/main/games/terraria/README.md).
 
 ## Worth knowing
 

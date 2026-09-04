@@ -4,7 +4,7 @@ FROM debian:trixie-slim
 
 LABEL org.opencontainers.image.title="ARK: Survival Ascended Dedicated Server" \
       org.opencontainers.image.description="ASA dedicated server (Windows binary via GE-Proton), SteamCMD-based, Unraid friendly. Inspired by ich777/steamcmd." \
-      org.opencontainers.image.source="https://github.com/blckassassin/ArkSA" \
+      org.opencontainers.image.source="https://github.com/blckassassin/unraid-game-servers" \
       org.opencontainers.image.licenses="MIT"
 
 ENV DEBIAN_FRONTEND="noninteractive" \

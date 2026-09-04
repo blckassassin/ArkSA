@@ -4,7 +4,7 @@ FROM debian:trixie-slim
 
 LABEL org.opencontainers.image.title="Terraria Dedicated Server" \
       org.opencontainers.image.description="Terraria dedicated server, native Linux binary, Unraid friendly." \
-      org.opencontainers.image.source="https://github.com/blckassassin/ArkSA" \
+      org.opencontainers.image.source="https://github.com/blckassassin/unraid-game-servers" \
       org.opencontainers.image.licenses="MIT"
 
 # STEAMCMD_DIR and PROTON_DIR are deliberately not set. shared/scripts/start.sh

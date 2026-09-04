@@ -51,7 +51,7 @@ docker run -d --name ark-sa \
 | `DEBUG`         | `false`          | `true` captures verbose wine and Proton logs.       |
 | `UID` / `GID`   | `99` / `100`     | Unraid defaults.                                    |
 
-Full list in the [README](https://github.com/blckassassin/ArkSA).
+Full list in the [README](https://github.com/blckassassin/unraid-game-servers).
 
 ## Worth knowing
 
@@ -87,7 +87,7 @@ Add `templates/ark-survival-ascended.xml` from the repository, or find
 
 ## Source and issues
 
-[github.com/blckassassin/ArkSA](https://github.com/blckassassin/ArkSA) — MIT.
+[github.com/blckassassin/unraid-game-servers](https://github.com/blckassassin/unraid-game-servers) — MIT.
 Structure and environment-variable naming follow
 [ich777's](https://github.com/ich777/docker-steamcmd-server) game server
 containers.

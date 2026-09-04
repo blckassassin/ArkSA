@@ -41,7 +41,7 @@ install_terraria() {
     local staging="/tmp/terraria-staging-$$"
 
     echo "---Downloading Terraria ${TERRARIA_VERSION}---"
-    if ! curl -fL "${url}" -o "${zip}"; then
+    if ! curl -fL --no-progress-meter "${url}" -o "${zip}"; then
         echo "---Download failed. Is TERRARIA_VERSION=${TERRARIA_VERSION} a real release?---"
         rm -f "${zip}"
         return 1

@@ -67,11 +67,14 @@ echo "== booting ${IMAGE} (${ENGINE})"
     "${IMAGE}" >/dev/null
 
 echo "== waiting for the server to listen"
-# GitHub-hosted runners are 2-core and Terraria's worldgen is single-threaded.
-# A 300s deadline was observed failing on a real CI run at 97% complete, while
-# the same WORLD_SIZE=1 world takes 25-50s on a developer machine. This exists
-# to catch a genuine hang, not to enforce a performance budget.
-boot_deadline=900
+# First boot generates a world, and that is single-threaded. On a 2-core
+# GitHub-hosted runner it is far slower than on a developer machine: 300s
+# failed at 97% complete, then 900s also failed at 97%, while the same
+# WORLD_SIZE=1 world reaches "Server started" in about 5 minutes locally.
+# This budget exists to catch a genuine hang, not to enforce a performance
+# target, so it is deliberately generous. Only a fresh world costs this; a
+# container with an existing world starts in seconds.
+boot_deadline=1800
 deadline=$((SECONDS + boot_deadline))
 next_report=$((SECONDS + 60))
 until "${ENGINE}" logs "${NAME}" 2>&1 | grep -q 'Server started'; do

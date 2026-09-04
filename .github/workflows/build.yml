@@ -63,7 +63,7 @@ jobs:
       # shellcheck and python3 are both preinstalled on ubuntu-latest.
       - name: Lint the scripts
         run: |
-          shellcheck --severity=warning shared/scripts/*.sh games/*/scripts/*.sh
+          shellcheck --severity=warning shared/scripts/*.sh games/*/scripts/*.sh tests/*.sh
           for f in games/*/scripts/*.py; do [ -e "$f" ] && python3 -m py_compile "$f"; done
           bash tests/unit.sh
 

@@ -29,6 +29,8 @@ ENV DEBIAN_FRONTEND="noninteractive" \
     DATA_PERM="775" \
     FIX_PERMS="true" \
     UMASK="000" \
+    # 6 + a bounded 3s reader wait = 9s, under Docker's 10s default stop
+    # grace. See start-server.sh's wait_for_reader() before raising this.
     STOP_TIMEOUT="6"
 
 RUN apt-get update && \

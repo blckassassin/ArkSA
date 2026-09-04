@@ -11,11 +11,11 @@
   <Overview>
 Terraria dedicated server.
 
-Terraria ships a native Linux server, so there is no Proton and no SteamCMD here - the server is a small download from terraria.org, checksummed before it is unpacked. First boot installs about 45MB and generates a world in seconds.
+Terraria ships a native Linux server, so the install is just a small download from terraria.org, checksummed before it is unpacked. First boot installs about 45MB and generates a world in seconds.
 
 Settings are applied on every start, so changing Max Players or the password here and restarting takes effect. The exception is World Name: pointing it at a name that does not exist yet generates a new world rather than renaming the old one, and the container will list the worlds it found in the log.
 
-Only 7777/tcp needs forwarding. Note that this is TCP, while an ARK server's 7777 is UDP, so the two can coexist on the same port number.
+Only 7777/tcp needs forwarding, and note that it is TCP rather than UDP.
 
 The server saves its world when the container stops. Leave Unraid's stop timeout at the default; the shutdown is designed to finish well inside it.
   </Overview>
@@ -27,9 +27,9 @@ The server saves its world when the container stops. Leave Unraid's stop timeout
   <ExtraSearchTerms>terraria dedicated server sandbox</ExtraSearchTerms>
   <Changes>Initial release.</Changes>
   <ExtraParams>--restart=unless-stopped</ExtraParams>
-  <Requires>About 100MB of disk and very little RAM - 1GB is comfortable for a small server. Unlike ARK this is not I/O heavy, so the array is fine.</Requires>
+  <Requires>About 100MB of disk and very little RAM - 1GB is comfortable for a small server. It is not I/O heavy, so the array is fine and no cache drive or SSD is needed.</Requires>
 
-  <Config Name="Game Port" Target="7777" Default="7777" Mode="tcp" Description="Game traffic. TCP, unlike ARK's UDP 7777. This is the one to forward." Type="Port" Display="always" Required="true" Mask="false">7777</Config>
+  <Config Name="Game Port" Target="7777" Default="7777" Mode="tcp" Description="Game traffic. TCP, not UDP. This is the one to forward." Type="Port" Display="always" Required="true" Mask="false">7777</Config>
 
   <Config Name="Server Files" Target="/serverdata/serverfiles" Default="/mnt/user/appdata/terraria" Mode="rw" Description="Where the server, worlds and config live. About 100MB - the array is fine, no SSD needed." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/terraria</Config>
 

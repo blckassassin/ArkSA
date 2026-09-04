@@ -4,9 +4,8 @@
 [![docker](https://img.shields.io/docker/v/ferment9348/terraria?sort=semver&label=docker%20hub)](https://hub.docker.com/r/ferment9348/terraria)
 [![license](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
 
-Terraria ships a native Linux server binary, so this container is a lot
-smaller and simpler than the ARK image next door: no SteamCMD, no Proton, no
-wine. The server is a ~45MB zip from terraria.org, checksummed before it is
+Terraria ships a native Linux server binary, so this container stays small and
+simple. The server is a ~45MB zip from terraria.org, checksummed before it is
 unpacked, and a world generates in seconds on first boot.
 
 ## Get the image
@@ -41,9 +40,8 @@ docker build -f games/terraria/Dockerfile -t ferment9348/terraria:latest .
 | ---- | ----- | --------------------------------------------------------- |
 | 7777 | TCP   | Game traffic. The only port to forward.                    |
 
-Terraria uses **TCP** on 7777. An ARK: Survival Ascended server's game port is
-**UDP** 7777, so the two can run on the same host with the same port number
-and never collide.
+Terraria uses **TCP** on 7777. A UDP service on 7777 is a different port as far
+as the network stack is concerned, so the two never collide.
 
 ## The version pin
 

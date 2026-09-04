@@ -1,8 +1,7 @@
 # Terraria — dedicated server
 
-A native-Linux Terraria dedicated server. No SteamCMD, no Proton, no wine —
-the server is a small checksummed download from terraria.org, and a world
-generates in seconds on first boot.
+A native-Linux Terraria dedicated server. The server is a small checksummed
+download from terraria.org, and a world generates in seconds on first boot.
 
 Built for Unraid, but it is an ordinary container and runs anywhere.
 
@@ -37,8 +36,9 @@ services:
 | ---- | ----- | ----------------------------------------------------- |
 | 7777 | TCP   | Game traffic, the only port to forward.                |
 
-Terraria uses TCP on 7777 — an ARK server's 7777 is UDP, so the two coexist
-fine on the same host and port number.
+Terraria uses TCP on 7777, not UDP. A UDP service on the same number is a
+different port as far as the network stack is concerned, so the two never
+collide.
 
 ## Common settings
 
